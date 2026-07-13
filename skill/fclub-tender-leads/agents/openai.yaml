@@ -1,6 +1,6 @@
 interface:
-  display_name: "FABAO CLUB Tender Leads"
-  short_description: "Daily FABAO CLUB tender lead workflow"
+  display_name: "發包標案每日搜尋"
+  short_description: "Daily FABAO CLUB tender search"
   default_prompt: "Use $fclub-tender-leads to check today's FABAO CLUB tender cases and update confirmed workflow rules."
 
 policy:

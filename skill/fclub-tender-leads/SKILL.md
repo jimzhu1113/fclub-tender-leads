@@ -1,13 +1,13 @@
 ---
 name: fclub-tender-leads
-description: Manage Jim's FABAO CLUB tender lead development workflow. Use when Codex needs to check https://www.fclub.tw/case_new.php for same-day outsourced engineering/bid cases, prepare daily tender case reports, update AGENTS.MD by asking Jim for missing rules, create or maintain the public GitHub repo jimzhu1113/fclub-tender-leads, or sync confirmed tender整理技巧 and workflow rules.
+description: Manage Jim's 發包標案每日搜尋 workflow for FABAO CLUB tender cases. Use when Codex needs to check https://www.fclub.tw/case_new.php for same-day outsourced engineering/bid cases, prepare daily tender case reports, update AGENTS.MD by asking Jim for missing rules, create or maintain the public GitHub repo jimzhu1113/fclub-tender-leads, or sync confirmed tender整理技巧 and workflow rules.
 ---
 
-# FABAO CLUB Tender Leads
+# 發包標案每日搜尋
 
 ## Overview
 
-Use this skill for Jim's 發包工程 / 標案開發 workflow around FABAO CLUB case discovery, `AGENTS.MD` maintenance, and GitHub sync.
+Use this skill for Jim's 發包標案每日搜尋 workflow around FABAO CLUB case discovery, `AGENTS.MD` maintenance, and GitHub sync.
 
 ## Daily Case Workflow
 

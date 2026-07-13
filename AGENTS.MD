@@ -1,8 +1,10 @@
-# FABAO CLUB Tender Lead Development
+# 發包標案每日搜尋
 
 ## Project Purpose
 
-This workspace supports FABAO CLUB tender lead development for outsourced engineering and bid opportunities.
+Project display name: 發包標案每日搜尋.
+
+This workspace supports daily FABAO CLUB tender search for outsourced engineering and bid opportunities.
 
 Primary daily goal:
 
