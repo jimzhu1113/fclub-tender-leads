@@ -31,7 +31,7 @@ For each case, report:
 - 是否過期
 - 案件連結: provide the full clickable URL; when Markdown is supported, make 案件名稱 a `[案件名稱](案件連結)` link.
 
-Do not commit or push daily case整理結果 to GitHub unless Jim explicitly asks.
+Do not commit or push search results, daily case整理結果, or historical case records to GitHub unless Jim explicitly asks.
 
 ## AGENTS.MD Workflow
 
@@ -58,7 +58,7 @@ Confirmed GitHub settings:
 - URL: `https://github.com/jimzhu1113/fclub-tender-leads`
 - Branch: `main`
 - Visibility: public
-- Automatic commit/push: allowed for `AGENTS.MD`, this skill, and confirmed tender整理技巧
+- Automatic commit/push: allowed only for `AGENTS.MD`, skill configuration files under `skill/`, workflow rules, and confirmed tender整理技巧
 
 Before syncing:
 
@@ -70,7 +70,9 @@ Before syncing:
 
 Never sync by default:
 
+- Search results
 - Daily case整理結果
+- Historical case records
 - Raw scrape/cache data
 - Gmail or private message contents
 - Temporary files
@@ -90,6 +92,7 @@ When reporting cases in a table, make each case name clickable and keep a separa
 ## Forbidden Actions
 
 - Do not upload daily case整理結果 to GitHub by default.
+- Do not upload search results or historical case records to GitHub by default.
 - Do not guess tender screening rules before Jim defines them.
 - Do not send emails automatically.
 - Do not permanently delete emails.

@@ -10,7 +10,7 @@ Primary daily goal:
 - Report only cases published on the current day.
 - List all same-day cases without filtering.
 - Maintain this `AGENTS.MD` and related workflow/tender整理技巧.
-- Sync workflow rules and整理技巧 to GitHub when local GitHub tooling is available.
+- Sync only workflow rules, skill configuration files, and整理技巧 to GitHub when local GitHub tooling is available.
 
 Planned GitHub repository:
 
@@ -18,7 +18,7 @@ Planned GitHub repository:
 - Repository name: `fclub-tender-leads`
 - URL: `https://github.com/jimzhu1113/fclub-tender-leads`
 - Branch: `main`
-- Push policy: automatic commit/push is allowed for `AGENTS.MD` and workflow/tender整理技巧.
+- Push policy: automatic commit/push is allowed only for `AGENTS.MD`, skill configuration files, workflow rules, and tender整理技巧.
 - Repository visibility: public.
 
 ## Daily Case Report Rules
@@ -44,7 +44,7 @@ Each case report must include:
 - 是否過期
 - 案件連結：提供完整可點擊網址；在支援 Markdown 的回報中，案件名稱也要做成 `[案件名稱](案件連結)`。
 
-Daily case整理結果 should not be committed or pushed to GitHub unless Jim explicitly asks.
+Daily search results, case整理結果, and historical case records must not be committed or pushed to GitHub unless Jim explicitly asks.
 
 ## AGENTS.MD Update Rules
 
@@ -72,12 +72,15 @@ When updating this file:
 Automatic GitHub sync is allowed for:
 
 - `AGENTS.MD`
+- Skill configuration files under `skill/`
 - Workflow rules
 - Tender lead development整理技巧
 
 Do not sync by default:
 
+- Search results
 - Daily case report outputs
+- Historical case records
 - Temporary files
 - Raw scrape/cache data
 - Email contents or private data
