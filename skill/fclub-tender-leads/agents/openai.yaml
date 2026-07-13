@@ -1,0 +1,7 @@
+interface:
+  display_name: "FABAO CLUB Tender Leads"
+  short_description: "Daily FABAO CLUB tender lead workflow"
+  default_prompt: "Use $fclub-tender-leads to check today's FABAO CLUB tender cases and update confirmed workflow rules."
+
+policy:
+  allow_implicit_invocation: true
