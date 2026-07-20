@@ -13,10 +13,13 @@ Use this skill for Jim's 發包標案每日搜尋 workflow around FABAO CLUB cas
 
 1. Determine the current date in Asia/Taipei.
 2. Open `https://www.fclub.tw/case_new.php`.
-3. Include only cases published on the current Asia/Taipei date.
-4. List every same-day case. Do not filter or rank opportunities unless Jim later defines screening rules.
-5. If no same-day cases exist, report that clearly.
-6. If the site cannot be read, report the failure reason and do not invent case data.
+3. Scheduled reporting runs Monday to Friday at 08:00 Asia/Taipei.
+4. Include cases published on the current Asia/Taipei date by default.
+5. If the previous scheduled report did not complete successfully, catch up every unreported date from the day after the last successful report through the current run date.
+6. If the last successful report date cannot be confirmed, catch up at least the most recent 5 calendar days through the current run date.
+7. List every current-day and catch-up case. Do not filter or rank opportunities unless Jim later defines screening rules.
+8. If no cases exist for a date or catch-up range, report that clearly.
+9. If the site cannot be read, report the failure reason, do not invent case data, and keep the failed date in the next catch-up range.
 
 For each case, report:
 
@@ -82,10 +85,13 @@ Never sync by default:
 Use these sections for daily reports:
 
 - `FABAO CLUB 今日案件`
+- `今日需要你處理`
 - `AGENTS.MD / GitHub 同步狀態`
 - `流程優化建議`
 
 Include Gmail-related sections only when Jim explicitly combines this workflow with mailbox work.
+
+If a report includes catch-up dates, state the catch-up range at the start of `FABAO CLUB 今日案件`.
 
 When reporting cases in a table, make each case name clickable and keep a separate `案件連結` column when space allows.
 

@@ -8,9 +8,10 @@ This workspace supports daily FABAO CLUB tender search for outsourced engineerin
 
 Primary daily goal:
 
-- At 08:00 Asia/Taipei, check `https://www.fclub.tw/case_new.php`.
-- Report only cases published on the current day.
-- List all same-day cases without filtering.
+- From Monday to Friday at 08:00 Asia/Taipei, check `https://www.fclub.tw/case_new.php`.
+- Report cases published on the current day, unless catch-up reporting is required.
+- If a scheduled report does not complete successfully, carry that date forward and include it in the next successful report.
+- List all current-day and catch-up cases without filtering.
 - Maintain this `AGENTS.MD` and related workflow/tender整理技巧.
 - Sync only workflow rules, skill configuration files, and整理技巧 to GitHub when local GitHub tooling is available.
 
@@ -28,10 +29,13 @@ Planned GitHub repository:
 For FABAO CLUB case checks:
 
 - Source URL: `https://www.fclub.tw/case_new.php`
-- Include only cases from the current date in Asia/Taipei.
-- Do not apply opportunity screening yet; list every same-day case.
-- If no same-day cases exist, report that clearly.
-- If the site cannot be read, report the failure reason clearly.
+- Scheduled reporting runs Monday to Friday at 08:00 Asia/Taipei.
+- Include cases from the current date in Asia/Taipei by default.
+- If the previous scheduled report did not complete successfully, include all unreported dates from the day after the last successful report through the current run date.
+- If the last successful report date cannot be confirmed, catch up at least the most recent 5 calendar days through the current run date.
+- Do not apply opportunity screening yet; list every current-day and catch-up case.
+- If no cases exist for a date or catch-up range, report that clearly.
+- If the site cannot be read, report the failure reason clearly and keep that date in the catch-up range for the next report.
 
 Each case report must include:
 
@@ -122,5 +126,7 @@ Use these sections for daily reports:
 - `流程優化建議`
 
 Include Gmail-related sections only when that daily run also performs mailbox work.
+
+If a report includes catch-up dates, state the catch-up range at the start of `FABAO CLUB 今日案件`.
 
 When reporting cases in a table, make the case name clickable and keep a separate `案件連結` column if space allows.
