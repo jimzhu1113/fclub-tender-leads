@@ -1,18 +1,20 @@
 ---
 name: fclub-tender-leads
-description: Manage Jim's 發包標案每日搜尋 workflow for FABAO CLUB tender cases. Use when Codex needs to check https://www.fclub.tw/case_new.php for same-day outsourced engineering/bid cases, prepare daily tender case reports, update AGENTS.MD by asking Jim for missing rules, create or maintain the public GitHub repo jimzhu1113/fclub-tender-leads, or sync confirmed tender整理技巧 and workflow rules.
+description: Manage Jim's 發包標案每日搜尋 workflow for FABAO CLUB and Taiwan Cooperative Bank tender cases. Use when Codex needs to check confirmed tender sources for same-day outsourced engineering/bid cases, prepare daily tender case reports, update AGENTS.MD by asking Jim for missing rules, create or maintain the public GitHub repo jimzhu1113/fclub-tender-leads, or sync confirmed tender整理技巧 and workflow rules.
 ---
 
 # 發包標案每日搜尋
 
 ## Overview
 
-Use this skill for Jim's 發包標案每日搜尋 workflow around FABAO CLUB case discovery, `AGENTS.MD` maintenance, and GitHub sync.
+Use this skill for Jim's 發包標案每日搜尋 workflow around confirmed tender source discovery, `AGENTS.MD` maintenance, and GitHub sync.
 
 ## Daily Case Workflow
 
 1. Determine the current date in Asia/Taipei.
-2. Open `https://www.fclub.tw/case_new.php`.
+2. Check confirmed tender sources:
+   - FABAO CLUB latest cases: `https://www.fclub.tw/case_new.php`
+   - Taiwan Cooperative Bank procurement bulletin: `https://ebulletin.tcb-bank.com.tw/bulletin-web/`
 3. Scheduled reporting runs Monday to Friday at 08:00 Asia/Taipei.
 4. Include cases published on the current Asia/Taipei date by default.
 5. If the previous scheduled report did not complete successfully, catch up every unreported date from the day after the last successful report through the current run date.
@@ -20,6 +22,12 @@ Use this skill for Jim's 發包標案每日搜尋 workflow around FABAO CLUB cas
 7. List every current-day and catch-up case. Do not filter or rank opportunities unless Jim later defines screening rules.
 8. If no cases exist for a date or catch-up range, report that clearly.
 9. If the site cannot be read, report the failure reason, do not invent case data, and keep the failed date in the next catch-up range.
+
+Source-specific rules:
+
+- FABAO CLUB: parse case cards from `case_new.php`; use the case detail URL under `case_page.php?uuid=...`.
+- Taiwan Cooperative Bank: parse `caseInfo` items from `https://ebulletin.tcb-bank.com.tw/bulletin-web/result.json`; include items whose `publicDate` is inside the report date range. Use `TCB_WEBQ011.html?PROJECT_ID=<caseNo>` for `PROCURE` items and `TCB_WEBQ012.html?PROJECT_ID=<caseNo>` for `DECIDE` items. Label `PROCURE` as 採購公告 and `DECIDE` as 決標公告.
+- Do not exclude Taiwan Cooperative Bank `DECIDE` records unless Jim later confirms that daily reports should only include procurement opportunities.
 
 For each case, report:
 
@@ -33,6 +41,18 @@ For each case, report:
 - 預算範圍
 - 是否過期
 - 案件連結: provide the full clickable URL; when Markdown is supported, make 案件名稱 a `[案件名稱](案件連結)` link.
+
+Taiwan Cooperative Bank field mapping:
+
+- 案件名稱: `title`
+- 編號: `caseNo`
+- 發布時間: `publicDate`
+- 地區: use the city/address shown in opening, delivery, or bulletin location fields when available; otherwise mark `未列示`
+- 單位屬性: `合作金庫商業銀行 / <dept>`
+- 項目類型: `caseText5` when available
+- 案件屬性: announcement type plus `caseText6` when available
+- 預算範圍: mark `未列示` when the bulletin does not provide budget
+- 是否過期: for procurement notices, compare bid/opening deadline with the current Asia/Taipei date; for decision notices, mark `已決標/不適用`
 
 Do not commit or push search results, daily case整理結果, or historical case records to GitHub unless Jim explicitly asks.
 
@@ -84,7 +104,9 @@ Never sync by default:
 
 Use these sections for daily reports:
 
+- `今日標案總覽`
 - `FABAO CLUB 今日案件`
+- `合作金庫採購公告今日案件`
 - `今日需要你處理`
 - `AGENTS.MD / GitHub 同步狀態`
 - `流程優化建議`

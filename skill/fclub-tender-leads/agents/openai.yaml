@@ -1,7 +1,7 @@
 interface:
   display_name: "發包標案每日搜尋"
-  short_description: "Daily FABAO CLUB tender search"
-  default_prompt: "Use $fclub-tender-leads to check weekday 08:00 FABAO CLUB tender cases, catch up missed successful reports, and update confirmed workflow rules."
+  short_description: "Daily FABAO CLUB and TCB tender search"
+  default_prompt: "Use $fclub-tender-leads to check weekday 08:00 FABAO CLUB and Taiwan Cooperative Bank tender cases, catch up missed successful reports, and update confirmed workflow rules."
 
 policy:
   allow_implicit_invocation: true
