@@ -1,6 +1,6 @@
 ---
 name: fclub-tender-leads
-description: Manage Jim's 發包標案每日搜尋 workflow for FABAO CLUB, Taiwan Cooperative Bank, Hua Nan Bank, Taiwan Business Bank, Chang Hwa Bank, and Institute for Information Industry tender cases. Use when Codex needs to check confirmed tender sources for same-day outsourced engineering/bid cases, prepare daily tender case reports, update AGENTS.MD by asking Jim for missing rules, create or maintain the public GitHub repo jimzhu1113/fclub-tender-leads, or sync confirmed tender整理技巧 and workflow rules.
+description: Manage Jim's 發包標案每日搜尋 workflow for FABAO CLUB, Taiwan Cooperative Bank, Hua Nan Bank, Taiwan Business Bank, Chang Hwa Bank, Institute for Information Industry, and Mega International Commercial Bank tender cases. Use when Codex needs to check confirmed tender sources for same-day outsourced engineering/bid cases, prepare daily tender case reports, update AGENTS.MD by asking Jim for missing rules, create or maintain the public GitHub repo jimzhu1113/fclub-tender-leads, or sync confirmed tender整理技巧 and workflow rules.
 ---
 
 # 發包標案每日搜尋
@@ -19,6 +19,7 @@ Use this skill for Jim's 發包標案每日搜尋 workflow around confirmed tend
    - Taiwan Business Bank tender announcements: `https://www.tbb.com.tw/zh-tw/about/information/announcement/tender`
    - Chang Hwa Bank announcements: `https://www.bankchb.com/frontend/newsInfo.jsp`
    - Institute for Information Industry procurement announcements: `https://bid.iii.org.tw/bid/`
+   - Mega International Commercial Bank business announcements: `https://www.megabank.com.tw/about/announcement/info/public`
 3. Scheduled reporting runs Monday to Friday at 08:00 Asia/Taipei.
 4. Include cases published on the current Asia/Taipei date by default.
 5. If the previous scheduled report did not complete successfully, catch up every unreported date from the day after the last successful report through the current run date.
@@ -36,6 +37,7 @@ Source-specific rules:
 - Taiwan Business Bank: parse the `招標/出租` tab on `https://www.tbb.com.tw/zh-tw/about/information/announcement/tender`. Use API `https://www.tbb.com.tw/api/client/announcement/getannouncementlist/tbb` with `dataItemId` `{0EEC155C-013A-44A3-86F0-4F85AE6A5382}` and `subCategoryOption` `All`. Include items whose visible publication date is inside the report range. Use detail links under `/zh-tw/about/information/announcement/news/tender-announcements/`. Engineering tenders are confirmed to appear in this `招標公告 / 招標/出租` source. Do not treat separate real-estate pages such as `公開標售` or `出租房地` as engineering tender sources unless Jim explicitly asks.
 - Chang Hwa Bank: parse `https://www.bankchb.com/frontend/newsInfo.jsp` and its JSON endpoint `https://www.bankchb.com/frontend/jsp/getNewsInfo.jsp`. Query the endpoint with `POST` fields `page`, `type`, and `pageSize`; start with blank `type`, and when needed enumerate visible category ids from `newsInfo.jsp` and query them as `type=<id>`. Deduplicate by `id`. Include items whose `date` is inside the report range and whose title indicates tender/procurement opportunity, such as `招標`, `採購`, `購置財物`, `工程招標`, `詢商`, `標售`, or `出租`. Use `https://www.bankchb.com/frontend/newsDetail.jsp?id=<id>` as the case link when the item `url` is blank; if `url` is provided, use that URL. Jim-provided historical example `https://www.bankchb.com/frontend/newsDetail.jsp?id=3941` confirms the detail URL pattern, but the page may later show `此筆資料已下架`; when that happens, mark 是否過期 as `已下架/可能過期` instead of inventing details.
 - Institute for Information Industry: `https://bid.iii.org.tw/bid/` is a frame page whose list source is `https://bid.iii.org.tw/bid/list/bid_new_list.aspx`. Parse the `GridView1` table. Include rows whose `領標起始日` is inside the report date range. Detail links use `https://bid.iii.org.tw/bid/list/bid_new_list.aspx?bid_no=<案號>&ord=<次數>`. Dates are in ROC format such as `115/07/31`; convert them to Gregorian dates such as `2026/07/31` for comparison and reporting, while preserving the original text when useful. If catch-up needs older rows beyond the first page, follow the ASP.NET pagination postback links for `GridView1` such as `Page$2`, carrying `__VIEWSTATE`, `__EVENTVALIDATION`, and related hidden fields.
+- Mega International Commercial Bank: Jim-provided URL `https://www.megabank.com.tw/about/announcement/public/tender` redirects to `https://www.megabank.com.tw/about/announcement/info/public`. Parse the business announcement page. Include items whose visible publication date is inside the report range and whose title or detail text indicates an engineering tender/procurement opportunity, such as `工程`, `裝修`, `監造`, `招標`, `決標`, `徵求廠商`, or `採購`. Use detail links under `https://www.megabank.com.tw/about/announcement/info/public/public-detail?sno=<sno>`. Do not treat every business announcement as a tender case.
 
 For each case, report:
 
@@ -110,6 +112,18 @@ Institute for Information Industry field mapping:
 - 預算範圍: parse `預算金額` from the detail page when shown; otherwise mark `未列示`
 - 是否過期: compare `截標終止日` with the current Asia/Taipei date/time; if past, mark `已過期`, otherwise mark `未過期`
 
+Mega International Commercial Bank field mapping:
+
+- 案件名稱: visible business announcement title
+- 編號: parse `sno` from the `public-detail?sno=<sno>` detail URL when no official case number appears
+- 發布時間: visible `發布時間`
+- 地區: parse from title or detail text, such as branch name, city, or `工程監造地點`; otherwise mark `未列示`
+- 單位屬性: `兆豐銀行 / 業務公告`
+- 項目類型: infer from title/detail text such as `室內裝修`, `監造`, `工程`, `採購`, or `招標`; otherwise mark `未列示`
+- 案件屬性: `業務公告`; append the clearest tender keyword such as `工程招標`, `徵求廠商`, or `監造` when clear
+- 預算範圍: mark `未列示` unless the detail page clearly states a budget
+- 是否過期: compare stated submission, bidding, opening, or deadline text with the current Asia/Taipei date; otherwise mark `未標示`
+
 Do not commit or push search results, daily case整理結果, or historical case records to GitHub unless Jim explicitly asks.
 
 ## AGENTS.MD Workflow
@@ -167,6 +181,7 @@ Use these sections for daily reports:
 - `臺灣企銀招標公告今日案件`
 - `彰化銀行招標公告今日案件`
 - `資策會採購公告今日案件`
+- `兆豐銀行業務公告今日案件`
 - `今日需要你處理`
 - `AGENTS.MD / GitHub 同步狀態`
 - `流程優化建議`
