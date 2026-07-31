@@ -13,6 +13,8 @@ Primary daily goal:
   - Taiwan Cooperative Bank procurement bulletin: `https://ebulletin.tcb-bank.com.tw/bulletin-web/`
   - Hua Nan Bank procurement information: `https://www.hncb.com.tw/wps/portal/HNCB/per_finance/service/public_item/latest_news`
   - Taiwan Business Bank tender announcements: `https://www.tbb.com.tw/zh-tw/about/information/announcement/tender`
+  - Chang Hwa Bank announcements: `https://www.bankchb.com/frontend/newsInfo.jsp`
+  - Institute for Information Industry procurement announcements: `https://bid.iii.org.tw/bid/`
 - Report cases published on the current day, unless catch-up reporting is required.
 - If a scheduled report does not complete successfully, carry that date forward and include it in the next successful report.
 - List all current-day and catch-up cases without filtering.
@@ -37,8 +39,12 @@ For daily case checks:
   - Taiwan Cooperative Bank procurement bulletin: `https://ebulletin.tcb-bank.com.tw/bulletin-web/`
   - Hua Nan Bank procurement information: `https://www.hncb.com.tw/wps/portal/HNCB/per_finance/service/public_item/latest_news`
   - Taiwan Business Bank tender announcements: `https://www.tbb.com.tw/zh-tw/about/information/announcement/tender`
+  - Chang Hwa Bank announcements: `https://www.bankchb.com/frontend/newsInfo.jsp`
+  - Institute for Information Industry procurement announcements: `https://bid.iii.org.tw/bid/`
 - Taiwan Cooperative Bank list data is loaded from `https://ebulletin.tcb-bank.com.tw/bulletin-web/result.json`.
 - Taiwan Business Bank list data is loaded from `https://www.tbb.com.tw/api/client/announcement/getannouncementlist/tbb`.
+- Chang Hwa Bank list data is loaded from `https://www.bankchb.com/frontend/jsp/getNewsInfo.jsp`.
+- Institute for Information Industry list data is loaded from `https://bid.iii.org.tw/bid/list/bid_new_list.aspx`.
 - Scheduled reporting runs Monday to Friday at 08:00 Asia/Taipei.
 - Include cases from the current date in Asia/Taipei by default.
 - If the previous scheduled report did not complete successfully, include all unreported dates from the day after the last successful report through the current run date.
@@ -54,6 +60,8 @@ Source-specific rules:
 - Do not exclude Taiwan Cooperative Bank `DECIDE` records unless Jim later confirms that daily reports should only include procurement opportunities.
 - Hua Nan Bank: parse latest-news cards whose tag is `採購情報` or whose link path contains `/pb-latest-news/c4/`. Engineering tender items are confirmed to appear in this same procurement information source. Use each card detail URL as the case link. If the card has a visible `page-link-date`, include it when the date is inside the report range. If the procurement card date is blank, mark 發布時間 as `未列示` and include it under the Hua Nan Bank section as `日期未列示，請人工確認`; do not invent a date.
 - Taiwan Business Bank: parse the `招標/出租` tab on `https://www.tbb.com.tw/zh-tw/about/information/announcement/tender`. Use API `https://www.tbb.com.tw/api/client/announcement/getannouncementlist/tbb` with `dataItemId` `{0EEC155C-013A-44A3-86F0-4F85AE6A5382}` and `subCategoryOption` `All`. Include items whose visible publication date is inside the report range. Use detail links under `/zh-tw/about/information/announcement/news/tender-announcements/`. Engineering tenders are confirmed to appear in this `招標公告 / 招標/出租` source. Do not treat separate real-estate pages such as `公開標售` or `出租房地` as engineering tender sources unless Jim explicitly asks.
+- Chang Hwa Bank: parse `https://www.bankchb.com/frontend/newsInfo.jsp` and its JSON endpoint `https://www.bankchb.com/frontend/jsp/getNewsInfo.jsp`. Query the endpoint with `POST` fields `page`, `type`, and `pageSize`; start with blank `type`, and when needed enumerate visible category ids from `newsInfo.jsp` and query them as `type=<id>`. Deduplicate by `id`. Include items whose `date` is inside the report range and whose title indicates tender/procurement opportunity, such as `招標`, `採購`, `購置財物`, `工程招標`, `詢商`, `標售`, or `出租`. Use `https://www.bankchb.com/frontend/newsDetail.jsp?id=<id>` as the case link when the item `url` is blank; if `url` is provided, use that URL. Jim-provided historical example `https://www.bankchb.com/frontend/newsDetail.jsp?id=3941` confirms the detail URL pattern, but the page may later show `此筆資料已下架`; when that happens, mark 是否過期 as `已下架/可能過期` instead of inventing details.
+- Institute for Information Industry: `https://bid.iii.org.tw/bid/` is a frame page whose list source is `https://bid.iii.org.tw/bid/list/bid_new_list.aspx`. Parse the `GridView1` table. Include rows whose `領標起始日` is inside the report date range. Detail links use `https://bid.iii.org.tw/bid/list/bid_new_list.aspx?bid_no=<案號>&ord=<次數>`. Dates are in ROC format such as `115/07/31`; convert them to Gregorian dates such as `2026/07/31` for comparison and reporting, while preserving the original text when useful. If catch-up needs older rows beyond the first page, follow the ASP.NET pagination postback links for `GridView1` such as `Page$2`, carrying `__VIEWSTATE`, `__EVENTVALIDATION`, and related hidden fields.
 
 Each case report must include:
 
@@ -103,6 +111,30 @@ Taiwan Business Bank field mapping:
 - 案件屬性: `招標/出租`; append `採購`, `招商`, `比價`, or `出租` when clear from the title/detail
 - 預算範圍: mark `未列示` unless the detail page clearly states a budget
 - 是否過期: infer from bidding, document pickup, opening, or deadline text when clear; otherwise mark `未標示`
+
+Chang Hwa Bank field mapping:
+
+- 案件名稱: `title`
+- 編號: `id` from `getNewsInfo.jsp` or the `newsDetail.jsp?id=<id>` detail URL
+- 發布時間: `date`
+- 地區: parse from title/detail text when an address, branch, building, or city is visible; otherwise mark `未列示`
+- 單位屬性: `彰化銀行 / 本行公告`
+- 項目類型: infer from title/detail text such as `工程`, `財物採購`, `資訊採購`, `詢商`, `標售`, or `出租`; otherwise mark `未列示`
+- 案件屬性: use the tender/procurement keyword found in the title, such as `工程招標公告`, `購置財物招標公告`, `詢商公告`, `標售`, or `出租`
+- 預算範圍: mark `未列示` unless the detail page clearly states a budget
+- 是否過期: infer from bidding, document pickup, opening, or deadline text when clear; if the detail page says `此筆資料已下架`, mark `已下架/可能過期`
+
+Institute for Information Industry field mapping:
+
+- 案件名稱: `採購標的` link text
+- 編號: `案號`; append `第<次數>次` from `招標狀態` when useful
+- 發布時間: `領標起始日`; convert ROC date to Gregorian date for daily comparison
+- 地區: parse from detail fields such as `招標機關地址`, `收受投標文件地點`, `開標地點`, or `履約地點`; otherwise mark `未列示`
+- 單位屬性: `資策會 / 採購公告`
+- 項目類型: `採購類別`, such as `勞務`, `財物`, or `工程`
+- 案件屬性: `招標狀態`; append `招標方式` from the detail page when clear
+- 預算範圍: parse `預算金額` from the detail page when shown; otherwise mark `未列示`
+- 是否過期: compare `截標終止日` with the current Asia/Taipei date/time; if past, mark `已過期`, otherwise mark `未過期`
 
 Daily search results, case整理結果, and historical case records must not be committed or pushed to GitHub unless Jim explicitly asks.
 
@@ -179,6 +211,8 @@ Use these sections for daily reports:
 - `合作金庫採購公告今日案件`
 - `華南銀行採購情報今日案件`
 - `臺灣企銀招標公告今日案件`
+- `彰化銀行招標公告今日案件`
+- `資策會採購公告今日案件`
 - `今日需要你處理`
 - `AGENTS.MD / GitHub 同步狀態`
 - `流程優化建議`
