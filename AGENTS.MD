@@ -12,6 +12,7 @@ Primary daily goal:
   - FABAO CLUB latest cases: `https://www.fclub.tw/case_new.php`
   - Taiwan Cooperative Bank procurement bulletin: `https://ebulletin.tcb-bank.com.tw/bulletin-web/`
   - Hua Nan Bank procurement information: `https://www.hncb.com.tw/wps/portal/HNCB/per_finance/service/public_item/latest_news`
+  - Taiwan Business Bank tender announcements: `https://www.tbb.com.tw/zh-tw/about/information/announcement/tender`
 - Report cases published on the current day, unless catch-up reporting is required.
 - If a scheduled report does not complete successfully, carry that date forward and include it in the next successful report.
 - List all current-day and catch-up cases without filtering.
@@ -35,7 +36,9 @@ For daily case checks:
   - FABAO CLUB latest cases: `https://www.fclub.tw/case_new.php`
   - Taiwan Cooperative Bank procurement bulletin: `https://ebulletin.tcb-bank.com.tw/bulletin-web/`
   - Hua Nan Bank procurement information: `https://www.hncb.com.tw/wps/portal/HNCB/per_finance/service/public_item/latest_news`
+  - Taiwan Business Bank tender announcements: `https://www.tbb.com.tw/zh-tw/about/information/announcement/tender`
 - Taiwan Cooperative Bank list data is loaded from `https://ebulletin.tcb-bank.com.tw/bulletin-web/result.json`.
+- Taiwan Business Bank list data is loaded from `https://www.tbb.com.tw/api/client/announcement/getannouncementlist/tbb`.
 - Scheduled reporting runs Monday to Friday at 08:00 Asia/Taipei.
 - Include cases from the current date in Asia/Taipei by default.
 - If the previous scheduled report did not complete successfully, include all unreported dates from the day after the last successful report through the current run date.
@@ -49,7 +52,8 @@ Source-specific rules:
 - FABAO CLUB: parse case cards from `case_new.php`; use the case detail URL under `case_page.php?uuid=...`.
 - Taiwan Cooperative Bank: parse `caseInfo` items from `result.json`; include items whose `publicDate` is inside the report date range. Use `TCB_WEBQ011.html?PROJECT_ID=<caseNo>` for `PROCURE` items and `TCB_WEBQ012.html?PROJECT_ID=<caseNo>` for `DECIDE` items. Label `PROCURE` as 採購公告 and `DECIDE` as 決標公告.
 - Do not exclude Taiwan Cooperative Bank `DECIDE` records unless Jim later confirms that daily reports should only include procurement opportunities.
-- Hua Nan Bank: parse latest-news cards whose tag is `採購情報` or whose link path contains `/pb-latest-news/c4/`. Use each card detail URL as the case link. If the card has a visible `page-link-date`, include it when the date is inside the report range. If the procurement card date is blank, mark 發布時間 as `未列示` and include it under the Hua Nan Bank section as `日期未列示，請人工確認`; do not invent a date.
+- Hua Nan Bank: parse latest-news cards whose tag is `採購情報` or whose link path contains `/pb-latest-news/c4/`. Engineering tender items are confirmed to appear in this same procurement information source. Use each card detail URL as the case link. If the card has a visible `page-link-date`, include it when the date is inside the report range. If the procurement card date is blank, mark 發布時間 as `未列示` and include it under the Hua Nan Bank section as `日期未列示，請人工確認`; do not invent a date.
+- Taiwan Business Bank: parse the `招標/出租` tab on `https://www.tbb.com.tw/zh-tw/about/information/announcement/tender`. Use API `https://www.tbb.com.tw/api/client/announcement/getannouncementlist/tbb` with `dataItemId` `{0EEC155C-013A-44A3-86F0-4F85AE6A5382}` and `subCategoryOption` `All`. Include items whose visible publication date is inside the report range. Use detail links under `/zh-tw/about/information/announcement/news/tender-announcements/`. Engineering tenders are confirmed to appear in this `招標公告 / 招標/出租` source. Do not treat separate real-estate pages such as `公開標售` or `出租房地` as engineering tender sources unless Jim explicitly asks.
 
 Each case report must include:
 
@@ -87,6 +91,18 @@ Hua Nan Bank field mapping:
 - 案件屬性: `採購情報`
 - 預算範圍: mark `未列示` unless the detail page clearly states a budget
 - 是否過期: infer from bidding, document pickup, or deadline text when clear; otherwise mark `未標示`
+
+Taiwan Business Bank field mapping:
+
+- 案件名稱: visible tender announcement link text
+- 編號: parse the `tender-announcements/<slug>` slug from the detail URL when no official case number appears; otherwise preserve the official number from title or detail text
+- 發布時間: visible publication date
+- 地區: parse from detail text when an address or branch location is visible; otherwise mark `未列示`
+- 單位屬性: `臺灣企銀 / 招標公告 / 招標/出租`
+- 項目類型: infer from title/detail text such as `工程`, `資訊採購`, `設備採購`, or `出租`; otherwise mark `未列示`
+- 案件屬性: `招標/出租`; append `採購`, `招商`, `比價`, or `出租` when clear from the title/detail
+- 預算範圍: mark `未列示` unless the detail page clearly states a budget
+- 是否過期: infer from bidding, document pickup, opening, or deadline text when clear; otherwise mark `未標示`
 
 Daily search results, case整理結果, and historical case records must not be committed or pushed to GitHub unless Jim explicitly asks.
 
@@ -162,12 +178,13 @@ Use these sections for daily reports:
 - `FABAO CLUB 今日案件`
 - `合作金庫採購公告今日案件`
 - `華南銀行採購情報今日案件`
+- `臺灣企銀招標公告今日案件`
 - `今日需要你處理`
 - `AGENTS.MD / GitHub 同步狀態`
 - `流程優化建議`
 
 Include Gmail-related sections only when that daily run also performs mailbox work.
 
-If a report includes catch-up dates, state the catch-up range at the start of `FABAO CLUB 今日案件`.
+If a report includes catch-up dates, state the catch-up range at the start of `今日標案總覽`.
 
 When reporting cases in a table, make the case name clickable and keep a separate `案件連結` column if space allows.
