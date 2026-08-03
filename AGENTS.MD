@@ -19,6 +19,7 @@ Primary daily goal:
   - Taiwan Creative Content Agency tender announcements: `https://taicca.tw/public_information/purchase_placard/list?type_id=1&input_search=&year=2026`
   - Kuang Jen Social Welfare Foundation activity/tender announcements: `https://www.kjswf.org.tw/Download.aspx?tid=123`
   - Taiwan Asset Management Co. tender announcements: `https://www.tamco.com.tw/webtamco/announce/?announce_cate_name=important-announce`
+  - First Bank fixed/tender announcements: `https://www.firstbank.com.tw/sites/fcb/FixedAnnouncement#atab1-tab`
 - Report cases published on the current day, unless catch-up reporting is required.
 - If a scheduled report does not complete successfully, carry that date forward and include it in the next successful report.
 - List all current-day and catch-up cases without filtering.
@@ -49,6 +50,7 @@ For daily case checks:
   - Taiwan Creative Content Agency tender announcements: `https://taicca.tw/public_information/purchase_placard/list?type_id=1&input_search=&year=2026`
   - Kuang Jen Social Welfare Foundation activity/tender announcements: `https://www.kjswf.org.tw/Download.aspx?tid=123`
   - Taiwan Asset Management Co. tender announcements: `https://www.tamco.com.tw/webtamco/announce/?announce_cate_name=important-announce`
+  - First Bank fixed/tender announcements: `https://www.firstbank.com.tw/sites/fcb/FixedAnnouncement#atab1-tab`
 - Taiwan Cooperative Bank list data is loaded from `https://ebulletin.tcb-bank.com.tw/bulletin-web/result.json`.
 - Taiwan Business Bank list data is loaded from `https://www.tbb.com.tw/api/client/announcement/getannouncementlist/tbb`.
 - Chang Hwa Bank list data is loaded from `https://www.bankchb.com/frontend/jsp/getNewsInfo.jsp`.
@@ -58,6 +60,7 @@ For daily case checks:
 - Kuang Jen Social Welfare Foundation tender-related items are found from `https://www.kjswf.org.tw/Download.aspx?tid=123` and paginated pages such as `https://www.kjswf.org.tw/Download.aspx?nowPage=<page>&tid=123`.
 - Taiwan Asset Management Co. tender announcements are checked from `https://www.tamco.com.tw/webtamco/announce/?announce_cate_name=important-announce`; if that category page is empty, scan `https://www.tamco.com.tw/webtamco/announce/` and paginated pages such as `https://www.tamco.com.tw/webtamco/announce/page/<page>/`, then filter items whose visible category is `招標公告`.
 - Scheduled reporting runs Monday to Friday at 08:00 Asia/Taipei.
+- First Bank fixed/tender announcements are checked from `https://www.firstbank.com.tw/sites/fcb/FixedAnnouncement#atab1-tab`; the page title is `公告資訊` and it contains announcement sections including `招標公告` and `採購公告`.
 - Include cases from the current date in Asia/Taipei by default.
 - If the previous scheduled report did not complete successfully, include all unreported dates from the day after the last successful report through the current run date.
 - If the last successful report date cannot be confirmed, catch up at least the most recent 5 calendar days through the current run date.
@@ -78,6 +81,8 @@ Source-specific rules:
 - Taiwan Creative Content Agency: parse the `招標公告` list at `https://taicca.tw/public_information/purchase_placard/list?type_id=1&input_search=&year=<西元年>`. Include list items whose visible announcement date is inside the report range. Detail links use `https://taicca.tw/public_information/purchase_placard/detail/<id>`. Follow pagination when catch-up needs older items. Parse detail fields such as `公告類別`, `標案案號`, `標案名稱`, `公告日期`, `招標區間`, `截標時間`, and `開標時間` when available. Do not include `決標公告` from the same section unless Jim later asks for awarded/decision cases.
 - Kuang Jen Social Welfare Foundation: parse the `活動訊息` list at `https://www.kjswf.org.tw/Download.aspx?tid=123` and follow pagination with `nowPage=<page>`. Include items whose title contains `公開招標`, `採購公告`, or `決標公告`, and prioritize engineering/procurement terms such as `工程`, `裝修`, `統包`, `設計`, or `採購`. Use `https://www.kjswf.org.tw/OnePage.aspx?tid=123&id=<id>` as the case link. Some tender links redirect to Google Drive folders; when that happens, keep the Kuang Jen page URL as the case link and include the Google Drive folder URL as an attachment/source note when visible. If a detail page contains structured fields such as `[標案案號]`, `[標案名稱]`, `[採購金額]`, `[預算金額]`, `[履約地點]`, or `[決標金額]`, parse them. If the list item redirects directly and no date is visible, mark 發布時間 as `未列示` and include it as `日期未列示，請人工確認`.
 - Taiwan Asset Management Co.: parse `https://www.tamco.com.tw/webtamco/announce/?announce_cate_name=important-announce`. If the category page shows `查無相關訊息`, scan `https://www.tamco.com.tw/webtamco/announce/` and pagination under `/announce/page/<page>/`; include items whose visible category is `招標公告` and whose publication date is inside the report range. Detail links use `https://www.tamco.com.tw/webtamco/<post-id>/`. Include engineering/procurement items such as `裝修工程`, `採購案`, `公開標售`, `工程`, or `招標`; do not include ordinary `最新消息` unless the title or detail clearly indicates a tender/procurement opportunity.
+
+- First Bank: parse `https://www.firstbank.com.tw/sites/fcb/FixedAnnouncement#atab1-tab`. Include items from the `招標公告` and `採購公告` sections whose visible publication date is inside the report range. Detail links use `https://www.firstbank.com.tw/sites/fcb/zh_TW/<id>` when the announcement item has a detail page. Include engineering/procurement items such as `工程`, `裝修`, `採購`, `招標`, `決標`, `公開甄選`, `標售`, or `徵求廠商`; do not include ordinary customer notices unless the title or detail clearly indicates a tender/procurement opportunity.
 
 Each case report must include:
 
@@ -200,6 +205,18 @@ Taiwan Asset Management Co. field mapping:
 - 預算範圍: parse budget,保證金,採購金額, or visible amount when clearly stated; otherwise mark `未列示`
 - 是否過期: compare公告期間,截止收件日期,投標期限,開標時間, or deadline text with the current Asia/Taipei date; if past, mark `已過期`, otherwise mark `未過期`; if no deadline is visible, mark `未標示`
 
+First Bank field mapping:
+
+- 案件名稱: visible announcement title or detail heading
+- 編號: parse the numeric `<id>` from `https://www.firstbank.com.tw/sites/fcb/zh_TW/<id>` when no official case number appears
+- 發布時間: visible announcement date such as `YYYY年MM月DD日`
+- 地區: parse branch name, building, city, address, bid location, or performance location from title/detail text; otherwise mark `未列示`
+- 單位屬性: `第一銀行 / 公告資訊 / 招標公告或採購公告`
+- 項目類型: infer from title/detail text such as `工程`, `裝修`, `採購`, `設備`, `資訊採購`, `公開甄選`, or `標售`; otherwise mark `未列示`
+- 案件屬性: use the source section or clearest tender keyword, such as `招標公告`, `採購公告`, `公開甄選`, `決標公告`, or `標售`
+- 預算範圍: parse budget, amount,底價,採購金額, or visible monetary range when clearly stated; otherwise mark `未列示`
+- 是否過期: compare bidding, document pickup, submission, opening, closing, or deadline text with the current Asia/Taipei date; for decision notices, mark `已決標/不適用`; if no deadline is visible, mark `未標示`
+
 Daily search results, case整理結果, and historical case records must not be committed or pushed to GitHub unless Jim explicitly asks.
 
 ## AGENTS.MD Update Rules
@@ -281,6 +298,7 @@ Use these sections for daily reports:
 - `文策院招標公告今日案件`
 - `光仁社福招標公告今日案件`
 - `台灣金聯招標公告今日案件`
+- `第一銀行招標公告今日案件`
 - `今日需要你處理`
 - `AGENTS.MD / GitHub 同步狀態`
 - `流程優化建議`
