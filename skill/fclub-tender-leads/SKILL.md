@@ -1,6 +1,6 @@
 ---
 name: fclub-tender-leads
-description: Manage Jim's 發包標案每日搜尋 workflow for FABAO CLUB, Taiwan Cooperative Bank, Hua Nan Bank, Taiwan Business Bank, Chang Hwa Bank, Institute for Information Industry, Mega International Commercial Bank, and Taiwan Creative Content Agency tender cases. Use when Codex needs to check confirmed tender sources for same-day outsourced engineering/bid cases, prepare daily tender case reports, update AGENTS.MD by asking Jim for missing rules, create or maintain the public GitHub repo jimzhu1113/fclub-tender-leads, or sync confirmed tender整理技巧 and workflow rules.
+description: Manage Jim's 發包標案每日搜尋 workflow for FABAO CLUB, Taiwan Cooperative Bank, Hua Nan Bank, Taiwan Business Bank, Chang Hwa Bank, Institute for Information Industry, Mega International Commercial Bank, Taiwan Creative Content Agency, Kuang Jen Social Welfare Foundation, and Taiwan Asset Management Co. tender cases. Use when Codex needs to check confirmed tender sources for same-day outsourced engineering/bid cases, prepare daily tender case reports, update AGENTS.MD by asking Jim for missing rules, create or maintain the public GitHub repo jimzhu1113/fclub-tender-leads, or sync confirmed tender整理技巧 and workflow rules.
 ---
 
 # 發包標案每日搜尋
@@ -21,6 +21,8 @@ Use this skill for Jim's 發包標案每日搜尋 workflow around confirmed tend
    - Institute for Information Industry procurement announcements: `https://bid.iii.org.tw/bid/`
    - Mega International Commercial Bank business announcements: `https://www.megabank.com.tw/about/announcement/info/public`
    - Taiwan Creative Content Agency tender announcements: `https://taicca.tw/public_information/purchase_placard/list?type_id=1&input_search=&year=2026`
+   - Kuang Jen Social Welfare Foundation activity/tender announcements: `https://www.kjswf.org.tw/Download.aspx?tid=123`
+   - Taiwan Asset Management Co. tender announcements: `https://www.tamco.com.tw/webtamco/announce/?announce_cate_name=important-announce`
 3. Scheduled reporting runs Monday to Friday at 08:00 Asia/Taipei.
 4. Include cases published on the current Asia/Taipei date by default.
 5. If the previous scheduled report did not complete successfully, catch up every unreported date from the day after the last successful report through the current run date.
@@ -40,6 +42,8 @@ Source-specific rules:
 - Institute for Information Industry: `https://bid.iii.org.tw/bid/` is a frame page whose list source is `https://bid.iii.org.tw/bid/list/bid_new_list.aspx`. Parse the `GridView1` table. Include rows whose `領標起始日` is inside the report date range. Detail links use `https://bid.iii.org.tw/bid/list/bid_new_list.aspx?bid_no=<案號>&ord=<次數>`. Dates are in ROC format such as `115/07/31`; convert them to Gregorian dates such as `2026/07/31` for comparison and reporting, while preserving the original text when useful. If catch-up needs older rows beyond the first page, follow the ASP.NET pagination postback links for `GridView1` such as `Page$2`, carrying `__VIEWSTATE`, `__EVENTVALIDATION`, and related hidden fields.
 - Mega International Commercial Bank: Jim-provided URL `https://www.megabank.com.tw/about/announcement/public/tender` redirects to `https://www.megabank.com.tw/about/announcement/info/public`. Parse the business announcement page. Include items whose visible publication date is inside the report range and whose title or detail text indicates an engineering tender/procurement opportunity, such as `工程`, `裝修`, `監造`, `招標`, `決標`, `徵求廠商`, or `採購`. Use detail links under `https://www.megabank.com.tw/about/announcement/info/public/public-detail?sno=<sno>`. Do not treat every business announcement as a tender case.
 - Taiwan Creative Content Agency: parse the `招標公告` list at `https://taicca.tw/public_information/purchase_placard/list?type_id=1&input_search=&year=<西元年>`. Include list items whose visible announcement date is inside the report date range. Detail links use `https://taicca.tw/public_information/purchase_placard/detail/<id>`. Follow pagination when catch-up needs older items. Parse detail fields such as `公告類別`, `標案案號`, `標案名稱`, `公告日期`, `招標區間`, `截標時間`, and `開標時間` when available. Do not include `決標公告` from the same section unless Jim later asks for awarded/decision cases.
+- Kuang Jen Social Welfare Foundation: parse the `活動訊息` list at `https://www.kjswf.org.tw/Download.aspx?tid=123` and follow pagination with `nowPage=<page>`. Include items whose title contains `公開招標`, `採購公告`, or `決標公告`, and prioritize engineering/procurement terms such as `工程`, `裝修`, `統包`, `設計`, or `採購`. Use `https://www.kjswf.org.tw/OnePage.aspx?tid=123&id=<id>` as the case link. Some tender links redirect to Google Drive folders; when that happens, keep the Kuang Jen page URL as the case link and include the Google Drive folder URL as an attachment/source note when visible. If a detail page contains structured fields such as `[標案案號]`, `[標案名稱]`, `[採購金額]`, `[預算金額]`, `[履約地點]`, or `[決標金額]`, parse them. If the list item redirects directly and no date is visible, mark 發布時間 as `未列示` and include it as `日期未列示，請人工確認`.
+- Taiwan Asset Management Co.: parse `https://www.tamco.com.tw/webtamco/announce/?announce_cate_name=important-announce`. If the category page shows `查無相關訊息`, scan `https://www.tamco.com.tw/webtamco/announce/` and pagination under `/announce/page/<page>/`; include items whose visible category is `招標公告` and whose publication date is inside the report range. Detail links use `https://www.tamco.com.tw/webtamco/<post-id>/`. Include engineering/procurement items such as `裝修工程`, `採購案`, `公開標售`, `工程`, or `招標`; do not include ordinary `最新消息` unless the title or detail clearly indicates a tender/procurement opportunity.
 
 For each case, report:
 
@@ -138,6 +142,30 @@ Taiwan Creative Content Agency field mapping:
 - 預算範圍: mark `未列示` unless the detail page clearly states a budget or amount
 - 是否過期: compare `截標時間` or the end date/time of `招標區間` with the current Asia/Taipei date/time; if past, mark `已過期`, otherwise mark `未過期`; if no deadline is visible, mark `未標示`
 
+Kuang Jen Social Welfare Foundation field mapping:
+
+- 案件名稱: visible list title or detail `[標案名稱]`
+- 編號: parse `[標案案號]` from detail text; if unavailable, parse the `id` from `OnePage.aspx?tid=123&id=<id>`
+- 發布時間: visible detail/list date when available; if the item redirects to Google Drive and no date is visible, mark `未列示`
+- 地區: parse `[履約地點]`, unit address,投標地址, or detail address when visible; otherwise mark `未列示`
+- 單位屬性: `光仁社福基金會 / 活動訊息 / 招標公告`
+- 項目類型: infer from title/detail text such as `室內裝修`, `統包工程`, `設計裝修`, `採購`, or `標售`; otherwise mark `未列示`
+- 案件屬性: use visible title label such as `公開招標`, `採購公告`, or `決標公告`
+- 預算範圍: parse `[預算金額]`, `[採購金額]`, or visible `預算金額`; otherwise mark `未列示`
+- 是否過期: compare投標期限,截止收件日期,開標日期, or similar deadline text with the current Asia/Taipei date; for `決標公告`, mark `已決標/不適用`; if no deadline is visible, mark `未標示`
+
+Taiwan Asset Management Co. field mapping:
+
+- 案件名稱: visible announcement title or detail heading
+- 編號: parse the numeric `<post-id>` from `https://www.tamco.com.tw/webtamco/<post-id>/` when no official case number appears
+- 發布時間: visible announcement category/date line such as `招標公告 YYYY/MM/DD`
+- 地區: parse address,投標地址,開標地點, or標的地址 from detail text; otherwise mark `未列示`
+- 單位屬性: `台灣金聯 / 訊息公告 / 招標公告`
+- 項目類型: infer from title/detail text such as `裝修工程`, `採購案`, `公開標售`, `工程`, or `不動產標售`; otherwise mark `未列示`
+- 案件屬性: `招標公告`; append `採購公告`, `公開標售`, or other clear tender status from the title/detail when available
+- 預算範圍: parse budget,保證金,採購金額, or visible amount when clearly stated; otherwise mark `未列示`
+- 是否過期: compare公告期間,截止收件日期,投標期限,開標時間, or deadline text with the current Asia/Taipei date; if past, mark `已過期`, otherwise mark `未過期`; if no deadline is visible, mark `未標示`
+
 Do not commit or push search results, daily case整理結果, or historical case records to GitHub unless Jim explicitly asks.
 
 ## AGENTS.MD Workflow
@@ -197,6 +225,8 @@ Use these sections for daily reports:
 - `資策會採購公告今日案件`
 - `兆豐銀行業務公告今日案件`
 - `文策院招標公告今日案件`
+- `光仁社福招標公告今日案件`
+- `台灣金聯招標公告今日案件`
 - `今日需要你處理`
 - `AGENTS.MD / GitHub 同步狀態`
 - `流程優化建議`
