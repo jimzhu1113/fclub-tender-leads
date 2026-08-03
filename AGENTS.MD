@@ -16,6 +16,7 @@ Primary daily goal:
   - Chang Hwa Bank announcements: `https://www.bankchb.com/frontend/newsInfo.jsp`
   - Institute for Information Industry procurement announcements: `https://bid.iii.org.tw/bid/`
   - Mega International Commercial Bank business announcements: `https://www.megabank.com.tw/about/announcement/info/public`
+  - Taiwan Creative Content Agency tender announcements: `https://taicca.tw/public_information/purchase_placard/list?type_id=1&input_search=&year=2026`
 - Report cases published on the current day, unless catch-up reporting is required.
 - If a scheduled report does not complete successfully, carry that date forward and include it in the next successful report.
 - List all current-day and catch-up cases without filtering.
@@ -43,11 +44,13 @@ For daily case checks:
   - Chang Hwa Bank announcements: `https://www.bankchb.com/frontend/newsInfo.jsp`
   - Institute for Information Industry procurement announcements: `https://bid.iii.org.tw/bid/`
   - Mega International Commercial Bank business announcements: `https://www.megabank.com.tw/about/announcement/info/public`
+  - Taiwan Creative Content Agency tender announcements: `https://taicca.tw/public_information/purchase_placard/list?type_id=1&input_search=&year=2026`
 - Taiwan Cooperative Bank list data is loaded from `https://ebulletin.tcb-bank.com.tw/bulletin-web/result.json`.
 - Taiwan Business Bank list data is loaded from `https://www.tbb.com.tw/api/client/announcement/getannouncementlist/tbb`.
 - Chang Hwa Bank list data is loaded from `https://www.bankchb.com/frontend/jsp/getNewsInfo.jsp`.
 - Institute for Information Industry list data is loaded from `https://bid.iii.org.tw/bid/list/bid_new_list.aspx`.
 - Mega International Commercial Bank tender-related items are found from `https://www.megabank.com.tw/about/announcement/info/public`; Jim-provided URL `https://www.megabank.com.tw/about/announcement/public/tender` redirects to this business announcement page.
+- Taiwan Creative Content Agency tender announcements are loaded from `https://taicca.tw/public_information/purchase_placard/list?type_id=1&input_search=&year=<西元年>`; Jim-provided 2026 URL is `https://taicca.tw/public_information/purchase_placard/list?type_id=1&input_search=&year=2026`.
 - Scheduled reporting runs Monday to Friday at 08:00 Asia/Taipei.
 - Include cases from the current date in Asia/Taipei by default.
 - If the previous scheduled report did not complete successfully, include all unreported dates from the day after the last successful report through the current run date.
@@ -66,6 +69,7 @@ Source-specific rules:
 - Chang Hwa Bank: parse `https://www.bankchb.com/frontend/newsInfo.jsp` and its JSON endpoint `https://www.bankchb.com/frontend/jsp/getNewsInfo.jsp`. Query the endpoint with `POST` fields `page`, `type`, and `pageSize`; start with blank `type`, and when needed enumerate visible category ids from `newsInfo.jsp` and query them as `type=<id>`. Deduplicate by `id`. Include items whose `date` is inside the report range and whose title indicates tender/procurement opportunity, such as `招標`, `採購`, `購置財物`, `工程招標`, `詢商`, `標售`, or `出租`. Use `https://www.bankchb.com/frontend/newsDetail.jsp?id=<id>` as the case link when the item `url` is blank; if `url` is provided, use that URL. Jim-provided historical example `https://www.bankchb.com/frontend/newsDetail.jsp?id=3941` confirms the detail URL pattern, but the page may later show `此筆資料已下架`; when that happens, mark 是否過期 as `已下架/可能過期` instead of inventing details.
 - Institute for Information Industry: `https://bid.iii.org.tw/bid/` is a frame page whose list source is `https://bid.iii.org.tw/bid/list/bid_new_list.aspx`. Parse the `GridView1` table. Include rows whose `領標起始日` is inside the report date range. Detail links use `https://bid.iii.org.tw/bid/list/bid_new_list.aspx?bid_no=<案號>&ord=<次數>`. Dates are in ROC format such as `115/07/31`; convert them to Gregorian dates such as `2026/07/31` for comparison and reporting, while preserving the original text when useful. If catch-up needs older rows beyond the first page, follow the ASP.NET pagination postback links for `GridView1` such as `Page$2`, carrying `__VIEWSTATE`, `__EVENTVALIDATION`, and related hidden fields.
 - Mega International Commercial Bank: parse `https://www.megabank.com.tw/about/announcement/info/public`. Include items whose visible publication date is inside the report range and whose title or detail text indicates an engineering tender/procurement opportunity, such as `工程`, `裝修`, `監造`, `招標`, `決標`, `徵求廠商`, or `採購`. Use detail links under `https://www.megabank.com.tw/about/announcement/info/public/public-detail?sno=<sno>`. Do not treat every business announcement as a tender case.
+- Taiwan Creative Content Agency: parse the `招標公告` list at `https://taicca.tw/public_information/purchase_placard/list?type_id=1&input_search=&year=<西元年>`. Include list items whose visible announcement date is inside the report range. Detail links use `https://taicca.tw/public_information/purchase_placard/detail/<id>`. Follow pagination when catch-up needs older items. Parse detail fields such as `公告類別`, `標案案號`, `標案名稱`, `公告日期`, `招標區間`, `截標時間`, and `開標時間` when available. Do not include `決標公告` from the same section unless Jim later asks for awarded/decision cases.
 
 Each case report must include:
 
@@ -152,6 +156,18 @@ Mega International Commercial Bank field mapping:
 - 預算範圍: mark `未列示` unless the detail page clearly states a budget
 - 是否過期: compare stated submission, bidding, opening, or deadline text with the current Asia/Taipei date; otherwise mark `未標示`
 
+Taiwan Creative Content Agency field mapping:
+
+- 案件名稱: visible list title or detail `標案名稱`
+- 編號: `標案案號` from the detail page; if unavailable, parse the `<id>` from the detail URL
+- 發布時間: visible list date or detail `公告日期`
+- 地區: parse from detail text when a venue, address, city, or service location is visible; otherwise mark `未列示`
+- 單位屬性: `文策院 / 採購公告 / 招標公告`
+- 項目類型: infer from title/detail text such as `勞務採購`, `財物`, `工程`, `租賃`, or `設計裝潢`; otherwise mark `未列示`
+- 案件屬性: `招標公告`; append `公開評選`, `公開徵求`, `更正公告`, or other clear tender method/status from the title or detail when available
+- 預算範圍: mark `未列示` unless the detail page clearly states a budget or amount
+- 是否過期: compare `截標時間` or the end date/time of `招標區間` with the current Asia/Taipei date/time; if past, mark `已過期`, otherwise mark `未過期`; if no deadline is visible, mark `未標示`
+
 Daily search results, case整理結果, and historical case records must not be committed or pushed to GitHub unless Jim explicitly asks.
 
 ## AGENTS.MD Update Rules
@@ -230,6 +246,7 @@ Use these sections for daily reports:
 - `彰化銀行招標公告今日案件`
 - `資策會採購公告今日案件`
 - `兆豐銀行業務公告今日案件`
+- `文策院招標公告今日案件`
 - `今日需要你處理`
 - `AGENTS.MD / GitHub 同步狀態`
 - `流程優化建議`
