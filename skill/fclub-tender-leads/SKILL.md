@@ -1,6 +1,6 @@
 ---
 name: fclub-tender-leads
-description: Manage Jim's 發包標案每日搜尋 workflow for FABAO CLUB, Taiwan Cooperative Bank, Hua Nan Bank, Taiwan Business Bank, Chang Hwa Bank, Institute for Information Industry, Mega International Commercial Bank, Taiwan Creative Content Agency, Kuang Jen Social Welfare Foundation, Taiwan Asset Management Co., and First Bank tender cases. Use when Codex needs to check confirmed tender sources for same-day outsourced engineering/bid cases, prepare daily tender case reports, update AGENTS.MD by asking Jim for missing rules, create or maintain the public GitHub repo jimzhu1113/fclub-tender-leads, or sync confirmed tender整理技巧 and workflow rules.
+description: Manage Jim's 發包標案每日搜尋 workflow for FABAO CLUB, Taiwan Cooperative Bank, Hua Nan Bank, Taiwan Business Bank, Chang Hwa Bank, Institute for Information Industry, Mega International Commercial Bank, Taiwan Creative Content Agency, Kuang Jen Social Welfare Foundation, Taiwan Asset Management Co., First Bank, Yuanta Bank, Yuanta Financial Holding, and Yuanta Life tender cases. Use when Codex needs to check confirmed tender sources for same-day outsourced engineering/bid cases, prepare daily tender case reports, update AGENTS.MD by asking Jim for missing rules, create or maintain the public GitHub repo jimzhu1113/fclub-tender-leads, or sync confirmed tender整理技巧 and workflow rules.
 ---
 
 # 發包標案每日搜尋
@@ -24,6 +24,9 @@ Use this skill for Jim's 發包標案每日搜尋 workflow around confirmed tend
    - Kuang Jen Social Welfare Foundation activity/tender announcements: `https://www.kjswf.org.tw/Download.aspx?tid=123`
    - Taiwan Asset Management Co. tender announcements: `https://www.tamco.com.tw/webtamco/announce/?announce_cate_name=important-announce`
    - First Bank fixed/tender announcements: `https://www.firstbank.com.tw/sites/fcb/FixedAnnouncement#atab1-tab`
+   - Yuanta Bank announcement information: `https://www.yuantabank.com.tw/bank/bulletin/bulletin/list.do`
+   - Yuanta Financial Holding major announcements: `https://www.yuanta.com/TW/News-and-Media/Announcements`
+   - Yuanta Life latest/important news: `https://www.yuantalife.com.tw/about/recent/news/?filterBy=member`
 3. Scheduled reporting runs Monday to Friday at 08:00 Asia/Taipei.
 4. Include cases published on the current Asia/Taipei date by default.
 5. If the previous scheduled report did not complete successfully, catch up every unreported date from the day after the last successful report through the current run date.
@@ -47,6 +50,9 @@ Source-specific rules:
 - Taiwan Asset Management Co.: parse `https://www.tamco.com.tw/webtamco/announce/?announce_cate_name=important-announce`. If the category page shows `查無相關訊息`, scan `https://www.tamco.com.tw/webtamco/announce/` and pagination under `/announce/page/<page>/`; include items whose visible category is `招標公告` and whose publication date is inside the report range. Detail links use `https://www.tamco.com.tw/webtamco/<post-id>/`. Include engineering/procurement items such as `裝修工程`, `採購案`, `公開標售`, `工程`, or `招標`; do not include ordinary `最新消息` unless the title or detail clearly indicates a tender/procurement opportunity.
 
 - First Bank: parse `https://www.firstbank.com.tw/sites/fcb/FixedAnnouncement#atab1-tab`. Include items from the `招標公告` and `採購公告` sections whose visible publication date is inside the report range. Detail links use `https://www.firstbank.com.tw/sites/fcb/zh_TW/<id>` when the announcement item has a detail page. Include engineering/procurement items such as `工程`, `裝修`, `採購`, `招標`, `決標`, `公開甄選`, `標售`, or `徵求廠商`; do not include ordinary customer notices unless the title or detail clearly indicates a tender/procurement opportunity.
+- Yuanta Bank: parse `https://www.yuantabank.com.tw/bank/bulletin/bulletin/list.do`. Include items whose visible publication date is inside the report range and whose title/detail contains tender/procurement keywords such as `招標`, `採購`, `工程`, `裝修`, `營繕`, `修繕`, `委託`, `徵求廠商`, `公開招標`, `比價`, `議價`, `清潔`, `保全`, `機電`, or `設備`. Use the official announcement detail URL from the item link. Do not include ordinary rate, service, card, fund, or customer notices unless the text clearly indicates a tender/procurement opportunity.
+- Yuanta Financial Holding: parse `https://www.yuanta.com/TW/News-and-Media/Announcements`. Include items whose visible publication date is inside the report range and whose title/detail contains tender/procurement or engineering keywords such as `招標`, `採購`, `工程`, `裝修`, `營繕`, `修繕`, `委託`, `徵求廠商`, `公開招標`, `施工`, `契約總價`, `發包`, or `追加工程款`. Detail links use `https://www.yuanta.com/TW/News-and-Media/Announcements/Detail?id=<id>`. Treat board or material announcements as `重大訊息 / 採購情報`; do not treat every financial disclosure as a tender case. Use `https://www.yuanta.com/TW/ESG/Environmental-Sustainability/Supplier-Management` only as a reference for Yuanta procurement categories.
+- Yuanta Life: parse `https://www.yuantalife.com.tw/about/recent/news/?filterBy=member`. Include items whose visible publication date is inside the report range and whose title/detail contains tender/procurement keywords such as `招標`, `採購`, `工程`, `裝修`, `營繕`, `修繕`, `委託`, `徵求廠商`, `公開招標`, `清潔`, `保全`, `機電`, or `設備`. Because no separate official tender page is confirmed, do not include ordinary insurance product, rate, service, or customer notices unless the text clearly indicates a tender/procurement opportunity.
 
 For each case, report:
 
@@ -181,6 +187,42 @@ First Bank field mapping:
 - 預算範圍: parse budget, amount,底價,採購金額, or visible monetary range when clearly stated; otherwise mark `未列示`
 - 是否過期: compare bidding, document pickup, submission, opening, closing, or deadline text with the current Asia/Taipei date; for decision notices, mark `已決標/不適用`; if no deadline is visible, mark `未標示`
 
+Yuanta Bank field mapping:
+
+- 案件名稱: visible announcement title or detail heading
+- 編號: parse an official case number from the title/detail when visible; otherwise parse the detail URL id or mark `未列示`
+- 發布時間: visible announcement date
+- 地區: parse branch name, building, city, address, bid location, or performance location from title/detail text; otherwise mark `未列示`
+- 單位屬性: `元大銀行 / 公告資訊`
+- 項目類型: infer from title/detail text such as `工程`, `裝修`, `採購`, `設備`, `資訊採購`, `清潔`, `保全`, or `機電`; otherwise mark `未列示`
+- 案件屬性: `公告資訊`; append the clearest tender keyword such as `招標公告`, `採購公告`, `徵求廠商`, `比價`, or `議價` when clear
+- 預算範圍: parse budget, amount,契約總價,採購金額, or visible monetary range when clearly stated; otherwise mark `未列示`
+- 是否過期: compare bidding, document pickup, submission, opening, closing, or deadline text with the current Asia/Taipei date; if no deadline is visible, mark `未標示`
+
+Yuanta Financial Holding field mapping:
+
+- 案件名稱: visible major announcement title or detail heading
+- 編號: parse the `id` from `https://www.yuanta.com/TW/News-and-Media/Announcements/Detail?id=<id>` when no official case number appears
+- 發布時間: visible announcement date
+- 地區: parse subsidiary, branch name, building, city, address, project location, or performance location from title/detail text; otherwise mark `未列示`
+- 單位屬性: `元大金控 / 重大訊息`
+- 項目類型: infer from title/detail text such as `室內裝修`, `工程`, `施工`, `設計`, `採購`, `設備`, `資訊採購`, or `勞務`; otherwise mark `未列示`
+- 案件屬性: `重大訊息 / 採購情報`; append `工程採購`, `公開招標`, `契約總價公告`, or other clear tender/procurement status when available
+- 預算範圍: parse contract amount, budget,契約總價,追加工程款, or visible monetary range when clearly stated; otherwise mark `未列示`
+- 是否過期: for material information about completed board approval or contract amount, mark `重大訊息/不適用`; if an active tender deadline is visible, compare it with the current Asia/Taipei date
+
+Yuanta Life field mapping:
+
+- 案件名稱: visible news title or detail heading
+- 編號: parse an official case number from the title/detail when visible; otherwise parse the detail URL id or mark `未列示`
+- 發布時間: visible publication date
+- 地區: parse office, building, city, address, bid location, or performance location from title/detail text; otherwise mark `未列示`
+- 單位屬性: `元大人壽 / 最新消息或重要服務訊息`
+- 項目類型: infer from title/detail text such as `工程`, `裝修`, `採購`, `設備`, `資訊採購`, `清潔`, `保全`, or `機電`; otherwise mark `未列示`
+- 案件屬性: use the clearest tender keyword, such as `招標公告`, `採購公告`, `徵求廠商`, `公開招標`, or `採購情報`
+- 預算範圍: parse budget, amount,契約總價,採購金額, or visible monetary range when clearly stated; otherwise mark `未列示`
+- 是否過期: compare bidding, document pickup, submission, opening, closing, or deadline text with the current Asia/Taipei date; if no deadline is visible, mark `未標示`
+
 Do not commit or push search results, daily case整理結果, or historical case records to GitHub unless Jim explicitly asks.
 
 ## AGENTS.MD Workflow
@@ -243,6 +285,9 @@ Use these sections for daily reports:
 - `光仁社福招標公告今日案件`
 - `台灣金聯招標公告今日案件`
 - `第一銀行招標公告今日案件`
+- `元大銀行公告資訊今日案件`
+- `元大金控重大訊息今日案件`
+- `元大人壽公告資訊今日案件`
 - `今日需要你處理`
 - `AGENTS.MD / GitHub 同步狀態`
 - `流程優化建議`

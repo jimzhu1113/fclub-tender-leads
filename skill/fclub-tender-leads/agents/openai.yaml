@@ -1,7 +1,7 @@
 interface:
   display_name: "發包標案每日搜尋"
   short_description: "Daily bank, public, and FABAO tender search"
-  default_prompt: "Use $fclub-tender-leads to check weekday 08:00 FABAO CLUB, Taiwan Cooperative Bank, Hua Nan Bank, Taiwan Business Bank, Chang Hwa Bank, Institute for Information Industry, Mega International Commercial Bank, Taiwan Creative Content Agency, Kuang Jen Social Welfare Foundation, Taiwan Asset Management Co., and First Bank tender cases, catch up missed successful reports, and update confirmed workflow rules."
+  default_prompt: "Use $fclub-tender-leads to check weekday 08:00 FABAO CLUB, Taiwan Cooperative Bank, Hua Nan Bank, Taiwan Business Bank, Chang Hwa Bank, Institute for Information Industry, Mega International Commercial Bank, Taiwan Creative Content Agency, Kuang Jen Social Welfare Foundation, Taiwan Asset Management Co., First Bank, Yuanta Bank, Yuanta Financial Holding, and Yuanta Life tender cases, catch up missed successful reports, and update confirmed workflow rules."
 
 policy:
   allow_implicit_invocation: true
