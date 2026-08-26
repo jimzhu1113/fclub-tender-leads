@@ -1,6 +1,6 @@
 ---
 name: fclub-tender-leads
-description: Manage Jim's 發包標案每日搜尋 workflow for FABAO CLUB, Taiwan Cooperative Bank, Hua Nan Bank, Taiwan Business Bank, Chang Hwa Bank, Institute for Information Industry, Mega International Commercial Bank, Taiwan Creative Content Agency, Kuang Jen Social Welfare Foundation, Taiwan Asset Management Co., First Bank, Yuanta Bank, Yuanta Financial Holding, and Yuanta Life tender cases. Use when Codex needs to check confirmed tender sources for same-day outsourced engineering/bid cases, prepare daily tender case reports, update AGENTS.MD by asking Jim for missing rules, create or maintain the public GitHub repo jimzhu1113/fclub-tender-leads, or sync confirmed tender整理技巧 and workflow rules.
+description: Manage Jim's 發包標案每日搜尋 workflow for FABAO CLUB, Taiwan Cooperative Bank, Hua Nan Bank, Taiwan Business Bank, Chang Hwa Bank, Institute for Information Industry, Mega International Commercial Bank, Taiwan Creative Content Agency, Kuang Jen Social Welfare Foundation, Taiwan Asset Management Co., First Bank, Yuanta Bank, Yuanta Financial Holding, and Yuanta Life tender cases. Use when Codex needs to check confirmed tender sources for current-day and previous-day outsourced engineering/bid cases, prepare daily tender case reports, update AGENTS.MD by asking Jim for missing rules, create or maintain the public GitHub repo jimzhu1113/fclub-tender-leads, or sync confirmed tender整理技巧 and workflow rules.
 ---
 
 # 發包標案每日搜尋
@@ -28,10 +28,10 @@ Use this skill for Jim's 發包標案每日搜尋 workflow around confirmed tend
    - Yuanta Financial Holding major announcements: `https://www.yuanta.com/TW/News-and-Media/Announcements`
    - Yuanta Life latest/important news: `https://www.yuantalife.com.tw/about/recent/news/?filterBy=member`
 3. Scheduled reporting runs Monday to Friday at 08:00 Asia/Taipei.
-4. Include cases published on the current Asia/Taipei date by default.
+4. Include cases published on the current Asia/Taipei date and previous Asia/Taipei date by default.
 5. If the previous scheduled report did not complete successfully, catch up every unreported date from the day after the last successful report through the current run date.
 6. If the last successful report date cannot be confirmed, catch up at least the most recent 5 calendar days through the current run date.
-7. List every current-day and catch-up case. Do not filter or rank opportunities unless Jim later defines screening rules.
+7. List every current-day, previous-day, and catch-up case. Do not filter or rank opportunities unless Jim later defines screening rules.
 8. If no cases exist for a date or catch-up range, report that clearly.
 9. If the site cannot be read, report the failure reason, do not invent case data, and keep the failed date in the next catch-up range.
 
