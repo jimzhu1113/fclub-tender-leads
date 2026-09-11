@@ -23,9 +23,10 @@ Primary daily goal:
   - Yuanta Bank announcement information: `https://www.yuantabank.com.tw/bank/bulletin/bulletin/list.do`
   - Yuanta Financial Holding major announcements: `https://www.yuanta.com/TW/News-and-Media/Announcements`
   - Yuanta Life latest/important news: `https://www.yuantalife.com.tw/about/recent/news/?filterBy=member`
-- Report cases published on the current day and previous day, unless catch-up reporting is required.
+- Report cases published on the current day and previous day, unless weekend expansion or catch-up reporting is required.
+- When the default or requested date range crosses Saturday or Sunday, expand the start date back to the preceding Friday. A normal Monday report therefore covers Friday through Monday.
 - If a scheduled report does not complete successfully, carry that date forward and include it in the next successful report.
-- List all current-day, previous-day, and catch-up cases without filtering.
+- List all current-day, previous-day, weekend-expansion, and catch-up cases without filtering.
 - Maintain this `AGENTS.MD` and related workflow/tender整理技巧.
 - Sync only workflow rules, skill configuration files, and整理技巧 to GitHub when local GitHub tooling is available.
 
@@ -72,9 +73,10 @@ For daily case checks:
 - Yuanta Life latest/important news is checked from `https://www.yuantalife.com.tw/about/recent/news/?filterBy=member`; no separate official tender page is confirmed, so include only dated news/service items whose title or detail clearly indicates tender/procurement work.
 - Yuanta Financial Holding supplier management page `https://www.yuanta.com/TW/ESG/Environmental-Sustainability/Supplier-Management` is reference-only for Yuanta procurement categories such as information technology, renovation/construction, office equipment, and professional services; do not list it as a daily case source.
 - Include cases from the current date and previous date in Asia/Taipei by default.
+- If the default or requested report date range crosses Saturday or Sunday, expand the start date to the preceding Friday; for example, a normal Monday report covers Friday through Monday.
 - If the previous scheduled report did not complete successfully, include all unreported dates from the day after the last successful report through the current run date.
 - If the last successful report date cannot be confirmed, catch up at least the most recent 5 calendar days through the current run date.
-- Do not apply opportunity screening yet; list every current-day, previous-day, and catch-up case.
+- Do not apply opportunity screening yet; list every current-day, previous-day, weekend-expansion, and catch-up case.
 - If no cases exist for a date or catch-up range, report that clearly.
 - If the site cannot be read, report the failure reason clearly and keep that date in the catch-up range for the next report.
 
