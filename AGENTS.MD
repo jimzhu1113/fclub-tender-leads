@@ -8,7 +8,7 @@ This workspace supports daily tender search for outsourced engineering and bid o
 
 Primary daily goal:
 
-- From Monday to Friday at 08:00 Asia/Taipei, check confirmed tender sources:
+- From Monday to Friday at 08:00 and 16:30 Asia/Taipei, check confirmed tender sources:
   - FABAO CLUB latest cases: `https://www.fclub.tw/case_new.php`
   - Taiwan Cooperative Bank procurement bulletin: `https://ebulletin.tcb-bank.com.tw/bulletin-web/`
   - Hua Nan Bank procurement information: `https://www.hncb.com.tw/wps/portal/HNCB/per_finance/service/public_item/latest_news`
@@ -66,7 +66,7 @@ For daily case checks:
 - Taiwan Creative Content Agency tender announcements are loaded from `https://taicca.tw/public_information/purchase_placard/list?type_id=1&input_search=&year=<西元年>`; Jim-provided 2026 URL is `https://taicca.tw/public_information/purchase_placard/list?type_id=1&input_search=&year=2026`.
 - Kuang Jen Social Welfare Foundation tender-related items are found from `https://www.kjswf.org.tw/Download.aspx?tid=123` and paginated pages such as `https://www.kjswf.org.tw/Download.aspx?nowPage=<page>&tid=123`.
 - Taiwan Asset Management Co. tender announcements are checked from `https://www.tamco.com.tw/webtamco/announce/?announce_cate_name=important-announce`; if that category page is empty, scan `https://www.tamco.com.tw/webtamco/announce/` and paginated pages such as `https://www.tamco.com.tw/webtamco/announce/page/<page>/`, then filter items whose visible category is `招標公告`.
-- Scheduled reporting runs Monday to Friday at 08:00 Asia/Taipei.
+- Scheduled reporting runs Monday to Friday at 08:00 and 16:30 Asia/Taipei. Both runs use this workspace and the same local source state.
 - First Bank fixed/tender announcements are checked from `https://www.firstbank.com.tw/sites/fcb/FixedAnnouncement#atab1-tab`; the page title is `公告資訊` and it contains announcement sections including `招標公告` and `採購公告`.
 - Yuanta Bank announcement information is checked from `https://www.yuantabank.com.tw/bank/bulletin/bulletin/list.do`; include only dated items whose title or detail clearly indicates tender/procurement work.
 - Yuanta Financial Holding major announcements are checked from `https://www.yuanta.com/TW/News-and-Media/Announcements`; include only dated items whose title or detail clearly indicates tender/procurement, engineering, renovation, construction, contract amount, or public bidding information. Treat these as tender intelligence unless the notice is clearly an active procurement opportunity.
@@ -91,7 +91,7 @@ Source-specific rules:
 - Institute for Information Industry: `https://bid.iii.org.tw/bid/` is a frame page whose list source is `https://bid.iii.org.tw/bid/list/bid_new_list.aspx`. Parse the `GridView1` table. Include rows whose `領標起始日` is inside the report date range. Detail links use `https://bid.iii.org.tw/bid/list/bid_new_list.aspx?bid_no=<案號>&ord=<次數>`. Dates are in ROC format such as `115/07/31`; convert them to Gregorian dates such as `2026/07/31` for comparison and reporting, while preserving the original text when useful. If catch-up needs older rows beyond the first page, follow the ASP.NET pagination postback links for `GridView1` such as `Page$2`, carrying `__VIEWSTATE`, `__EVENTVALIDATION`, and related hidden fields.
 - Mega International Commercial Bank: parse `https://www.megabank.com.tw/about/announcement/info/public`. Include items whose visible publication date is inside the report range and whose title or detail text indicates an engineering tender/procurement opportunity, such as `工程`, `裝修`, `監造`, `招標`, `決標`, `徵求廠商`, or `採購`. Use detail links under `https://www.megabank.com.tw/about/announcement/info/public/public-detail?sno=<sno>`. Do not treat every business announcement as a tender case.
 - Taiwan Creative Content Agency: parse the `招標公告` list at `https://taicca.tw/public_information/purchase_placard/list?type_id=1&input_search=&year=<西元年>`. Include list items whose visible announcement date is inside the report range. Detail links use `https://taicca.tw/public_information/purchase_placard/detail/<id>`. Follow pagination when catch-up needs older items. Parse detail fields such as `公告類別`, `標案案號`, `標案名稱`, `公告日期`, `招標區間`, `截標時間`, and `開標時間` when available. Do not include `決標公告` from the same section unless Jim later asks for awarded/decision cases.
-- Taiwan Creative Content Agency fallback: this source often returns 403 or times out. When the primary list URL fails, retry once with browser-like request headers, a warm-up request to `https://www.taicca.tw/`, and a 60-90 second timeout. If it still fails, try `https://www.taicca.tw/public_information/purchase_placard/list`, then official detail probing around the newest known numeric detail ids under `https://www.taicca.tw/public_information/purchase_placard/detail/<id>` and `https://taicca.tw/public_information/purchase_placard/detail/<id>?type_id=1`. If the homepage warm-up itself returns 403, skip repeated direct detail probing for that run and move directly to the web-search fallback. Include only official detail pages whose `公告類別` is `招標公告` and whose `公告日期` is inside the report range. If both list and detail probing fail, use web search queries limited to official TAICCA purchase placard URLs, such as `site:taicca.tw/public_information/purchase_placard/detail 文策院 招標公告 <year>` and date-specific queries, then mark the item as `搜尋引擎快照，需人工確認`. Do not mark the TAICCA source as fully successful unless at least one official list or official detail page was read directly.
+- Taiwan Creative Content Agency fallback: use a normal browser to open the official list when direct fetching returns 403 or fails to render. For transient timeouts, allow one retry with a 60-90 second timeout and official homepage warm-up; do not repeatedly retry a denied request. Try the official www list variant if necessary. Follow visible official detail links and pagination; do not guess numeric detail ids. Do not bypass CAPTCHA, login requirements, or access controls. If official browsing still fails, use search restricted to official purchase placard URLs and label any snapshot-only result `搜尋引擎快照，需人工確認`. Only include 招標公告 dated inside the range. A readable single detail or a search snapshot does not prove complete date coverage: keep the source partial unless the official list and required pages were verified.
 - Kuang Jen Social Welfare Foundation: parse the `活動訊息` list at `https://www.kjswf.org.tw/Download.aspx?tid=123` and follow pagination with `nowPage=<page>`. Include items whose title contains `公開招標`, `採購公告`, or `決標公告`, and prioritize engineering/procurement terms such as `工程`, `裝修`, `統包`, `設計`, or `採購`. Use `https://www.kjswf.org.tw/OnePage.aspx?tid=123&id=<id>` as the case link. Some tender links redirect to Google Drive folders; when that happens, keep the Kuang Jen page URL as the case link and include the Google Drive folder URL as an attachment/source note when visible. If a detail page contains structured fields such as `[標案案號]`, `[標案名稱]`, `[採購金額]`, `[預算金額]`, `[履約地點]`, or `[決標金額]`, parse them. If the list item redirects directly and no date is visible, mark 發布時間 as `未列示` and include it as `日期未列示，請人工確認`.
 - Taiwan Asset Management Co.: parse `https://www.tamco.com.tw/webtamco/announce/?announce_cate_name=important-announce`. If the category page shows `查無相關訊息`, scan `https://www.tamco.com.tw/webtamco/announce/` and pagination under `/announce/page/<page>/`; include items whose visible category is `招標公告` and whose publication date is inside the report range. Detail links use `https://www.tamco.com.tw/webtamco/<post-id>/`. Include engineering/procurement items such as `裝修工程`, `採購案`, `公開標售`, `工程`, or `招標`; do not include ordinary `最新消息` unless the title or detail clearly indicates a tender/procurement opportunity.
 
@@ -111,6 +111,10 @@ Each case report must include:
 - 案件屬性
 - 預算範圍
 - 是否過期
+- 截標時間、距截標剩餘天數；距截標 3 天內標示 `即將截標`
+- 開標時間（與截標時間分開）、履約地點、投標/開標地點
+- 匯報狀態：新增、內容更新、已匯報；日期未列示另加註，不假造發布日期
+- 機會狀態：可投標、已決標、採購情報或待確認
 - 案件連結：提供完整可點擊網址；在支援 Markdown 的回報中，案件名稱也要做成 `[案件名稱](案件連結)`。
 
 Taiwan Cooperative Bank field mapping:
@@ -271,6 +275,23 @@ Yuanta Life field mapping:
 
 Daily search results, case整理結果, and historical case records must not be committed or pushed to GitHub unless Jim explicitly asks.
 
+## Reliable Morning and Afternoon Workflow
+
+- This file is the single source of truth. The installed Skill is a small entrypoint to the workspace copy; do not maintain another source list or date policy there.
+- Use `node skill/fclub-tender-leads/scripts/tender-workflow.mjs plan --root .` before collecting cases. Do not run the retired `tmp_*probe.mjs` or `tmp_tender_extract.mjs` scripts or edit hardcoded dates for each run.
+- The helper computes Asia/Taipei dates, inclusive ranges, weekend expansion and per-source catch-up. Unknown source history starts at least five calendar days back (today included). A previously failed range remains pending until that source is completely checked and its report is confirmed delivered.
+- Morning and afternoon both check all 14 sources and keep all in-range cases. The afternoon report highlights new/changed cases and urgent deadlines first; unchanged cases remain in a compact linked table with the required fields. Do not silently exclude cases or introduce opportunity screening.
+- For each source record `complete`, `partial`, or `failed`, the checked time, date coverage, official evidence URLs, structure validation and pagination completion. Missing sources default to failed. HTTP 200 or an empty parser output is not evidence of zero cases. Confirm a recognizable official list and either parsed entries or an explicit empty-list indication, and follow all pages needed to reach the range boundary.
+- Only a complete official date-range check can advance that source's successful coverage. Failed/partial sources retain their own pending start date; successful sources do not inherit another source's failure. A run is wholly successful only when all 14 sources are complete.
+- State, pending reports, source responses and case fingerprints belong exclusively in `.tender-local/` (Git ignored). Use the helper's two-phase `prepare` and `ack` protocol. Preparing a report must not mark it delivered. On the next run, verify the previous final report's run id in this task before acknowledging it. If delivery cannot be verified, keep pending coverage and recheck. Do not initialize success from file timestamps, tool completion, or assumptions.
+- Duplicate identity is source + case number (or canonical URL) + tender round + notice type. Different rounds, corrections, procurement and decision notices must not be collapsed. Compare substantive content with the last delivered record to label new/updated/reported. First-seen time is not publication time.
+- Keep dated and undated cases distinguishable. Retain HNCB/Kuang Jen undated notices according to their source rules, clearly marked for manual confirmation.
+- Deadline calculations use Asia/Taipei and actual submission cutoff, never opening time as a substitute. This overrides any older source-specific wording that permits using opening/document-pickup times for expiration. Missing cutoff is `未標示`; date-only cutoff on that date is `今日截止，時間未列示`. Decisions and non-actionable material disclosures are not active bidding opportunities. Only verified procurement with a future cutoff is labelled `可投標`; otherwise use `待確認` when appropriate.
+- Separate performance location from submission/opening location. Do not infer the work location solely from the agency's office address.
+- Start the report with the complete date range, checked-at time, complete/partial/failed counts out of 14, and new/updated/previously-reported counts. Include urgent cases, then per-source cases and pending-source reasons. Say `截至查詢時間` rather than claiming a morning scan covers the whole day.
+- A direct fetch failure may fall back to normal official browsing. Use at most one transient retry, bounded timeouts and no access-control bypass. Search snapshots are supplementary and never count as a complete official check.
+- Test helpers after changes with `node --test skill/fclub-tender-leads/scripts/tender-workflow.test.mjs`; use only synthetic fixtures in committed tests. All actual observations stay local.
+
 ## AGENTS.MD Update Rules
 
 Update this file only when Jim confirms a new rule, workflow, label, output format, or tender development technique.
@@ -298,6 +319,8 @@ Automatic GitHub sync is allowed for:
 
 - `AGENTS.MD`
 - Skill configuration files under `skill/`
+- Reusable workflow helpers and synthetic tests under `skill/fclub-tender-leads/scripts/`
+- `.gitignore` and the upload allowlist guard
 - Workflow rules
 - Tender lead development整理技巧
 
@@ -317,6 +340,7 @@ Before pushing:
 - Create the GitHub repository as public if it does not exist and GitHub tooling is available.
 - Confirm credentials are available.
 - Use branch `main`.
+- Stage exact approved paths only; never use `git add .` or `git add -A`. Run `node skill/fclub-tender-leads/scripts/check-sync.mjs --staged` before commit and `--outgoing` before push. Do not push any unapproved file, even if already tracked.
 - Do not work around missing authentication.
 - Do not create unrelated repositories.
 
@@ -361,5 +385,7 @@ Use these sections for daily reports:
 Include Gmail-related sections only when that daily run also performs mailbox work.
 
 If a report includes catch-up dates, state the catch-up range at the start of `今日標案總覽`.
+
+Include the report run id in the final message for delivery reconciliation. Every source must have a result or an explicit pending reason. Afternoon highlights may precede the source sections, but retain all cases and the existing required fields.
 
 When reporting cases in a table, make the case name clickable and keep a separate `案件連結` column if space allows.

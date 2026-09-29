@@ -1,0 +1,20 @@
+# Only approved rules and reusable Skill files may be versioned.
+*
+!/.gitignore
+!/AGENTS.MD
+!/skill/
+/skill/*
+!/skill/fclub-tender-leads/
+/skill/fclub-tender-leads/*
+!/skill/fclub-tender-leads/SKILL.md
+!/skill/fclub-tender-leads/agents/
+!/skill/fclub-tender-leads/agents/openai.yaml
+!/skill/fclub-tender-leads/scripts/
+/skill/fclub-tender-leads/scripts/*
+!/skill/fclub-tender-leads/scripts/tender-workflow.mjs
+!/skill/fclub-tender-leads/scripts/tender-workflow.test.mjs
+!/skill/fclub-tender-leads/scripts/check-sync.mjs
+# Keep all actual records, responses and reports local, including forced paths.
+.tender-local/
+tmp_*
+.env*
