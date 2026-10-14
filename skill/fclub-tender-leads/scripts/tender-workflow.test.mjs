@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { isoDate, shiftDate, taipeiDate, expandWeekend, readSources, emptyState, makePlan, normalizeCase, deadlineInfo, validateSource, buildReport, renderReport, acknowledge } from './tender-workflow.mjs';
+import { isoDate, shiftDate, taipeiDate, expandWeekend, readSources, emptyState, makePlan, normalizeCase, deadlineInfo, validateSource, buildReport, summarizeReport, renderReport, acknowledge } from './tender-workflow.mjs';
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
 const rules = await fs.readFile(path.resolve(dir, '../../../AGENTS.MD'), 'utf8');
@@ -20,6 +20,19 @@ const known = (date = '2026-09-28') => {
 const complete = (source, cases = []) => ({ id: source.id, status: 'complete', range: source.range, checkedAt: now, cases,
   verification: { officialListRead: true, structureValid: true, paginationComplete: true, dateCoverageComplete: true, parsedCount: 20, explicitEmpty: false, evidenceUrls: [source.url] } });
 const inputFor = (plan, items = []) => ({ runId: plan.runId, sources: plan.sources.map(s => complete(s, s.id === 'iii' ? items : [])) });
+
+test('compact summary keeps coverage and urgency without duplicating full cases', () => {
+  const state = known();
+  const plan = makePlan(sources, state, { asOf: now });
+  const report = buildReport(plan, inputFor(plan, [synthetic()]), state);
+  const summary = summarizeReport(report);
+  assert.equal(summary.total, 1);
+  assert.equal(summary.sources.length, 14);
+  assert.equal(summary.urgent.length, 1);
+  assert.equal(summary.urgent[0].url, report.sources.find(s => s.id === 'iii').cases[0].url);
+  assert.equal('cases' in summary.sources[0], false);
+  assert.deepEqual(summary.counts, report.counts);
+});
 
 test('Taipei midnight, leap year and strict date validation', () => {
   assert.equal(taipeiDate('2026-09-28T16:01:00Z'), '2026-09-29');
@@ -210,10 +223,26 @@ test('CLI round trip does not advance coverage until ack; all files stay local',
     await fs.writeFile(plan.inputFile, JSON.stringify(inputFor(plan, [synthetic()])));
     const prepared = JSON.parse(cli('prepare', '--input', plan.inputFile));
     assert.equal(prepared.delivered, false);
+    const summary = JSON.parse(cli('summary', '--run-id', plan.runId));
+    assert.equal(summary.runId, plan.runId);
+    assert.equal(summary.total, 1);
+    assert.equal(summary.delivered, false);
+    assert.equal(summary.sources.length, 14);
+    assert.equal(summary.sources[0].cases, undefined);
+    assert.equal(JSON.parse(await fs.readFile(path.join(path.dirname(plan.inputFile), 'report.json'))).runId, plan.runId);
     const stateFile = path.join(root, '.tender-local/state.json');
     assert.equal(Object.keys(JSON.parse(await fs.readFile(stateFile)).sources).length, 0);
     cli('ack', '--run-id', plan.runId, '--evidence', 'synthetic final');
     assert.equal(JSON.parse(await fs.readFile(stateFile)).sources.iii.reportedThrough, '2026-09-29');
+    assert.equal(JSON.parse(cli('summary', '--run-id', plan.runId)).delivered, true);
+    const compact = JSON.parse(cli('plan', '--compact', '--as-of', now));
+    const fullPlan = JSON.parse(await fs.readFile(path.join(path.dirname(compact.inputFile), 'plan.json')));
+    assert.equal(compact.sources.length, fullPlan.sources.length);
+    assert.deepEqual(compact.sources.map(s => s.range), fullPlan.sources.map(s => s.range));
+    assert.equal(compact.sources[0].url, undefined);
+    assert.ok(fullPlan.sources[0].url);
+    const unsafeSummary = spawnSync(process.execPath, [path.join(dir, 'tender-workflow.mjs'), 'summary', '--root', root, '--run-id', '../outside']);
+    assert.notEqual(unsafeSummary.status, 0);
     const invalid = spawnSync(process.execPath, [path.join(dir, 'tender-workflow.mjs'), 'prepare', '--root', root, '--input', path.join(root, 'outside.json')]);
     assert.notEqual(invalid.status, 0);
     await fs.writeFile(stateFile, '{broken');

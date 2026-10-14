@@ -1,6 +1,6 @@
 ---
 name: fclub-tender-leads
-description: Run Jim's Taiwan tender monitoring, morning and afternoon reports, source-specific catch-up, and approved workflow-only GitHub sync. Use for tender searches or maintaining this workflow, not unrelated procurement or mailbox work.
+description: Run Jim's Taiwan tender monitoring, daily morning reports, source-specific catch-up, and approved workflow-only GitHub sync. Use for tender searches or maintaining this workflow, not unrelated procurement or mailbox work.
 ---
 
 # 發包標案每日搜尋
@@ -26,7 +26,7 @@ the global Skill installation. Do not run historical `tmp_*.mjs` scripts.
    `node skill/fclub-tender-leads/scripts/tender-workflow.mjs ack --root . --run-id <id> --evidence <thread-and-final-message-reference>`.
    Never acknowledge the current report before it has appeared in a final
    message. File creation or a successful fetch is not delivery evidence.
-2. Run `node skill/fclub-tender-leads/scripts/tender-workflow.mjs plan --root .`.
+2. Run `node skill/fclub-tender-leads/scripts/tender-workflow.mjs plan --root . --compact`.
    The printed plan gives each source's inclusive date range and creates a
    local input template. Optional `--start YYYY-MM-DD --end YYYY-MM-DD` supports
    user requests; `--as-of <ISO timestamp with offset>` is for reproducible tests.
@@ -56,17 +56,21 @@ the global Skill installation. Do not run historical `tmp_*.mjs` scripts.
    report; if corrections are needed after preparing, create a fresh plan and
    corrected input (old undelivered coverage remains pending). It does not fetch
    websites itself: source collection still uses the agent's available tools.
-7. Return the full report in this task, or a concise overview with a clickable
+7. Use `node skill/fclub-tender-leads/scripts/tender-workflow.mjs summary --root . --run-id <id>` for counts, urgent cases and pending-source reasons without loading the full report into the conversation. Return the full report in this task, or a concise overview with a clickable
    link to the complete local report when long. Include the exact run id in
    the final message. Do not claim all 14 sources succeeded unless validated.
    Leave acknowledgment to the next run after checking actual delivery.
 
-Both daily runs retain every in-range case. Afternoon highlights new/updated
+The weekday 08:00 run and manual requests retain every in-range case. Highlight new/updated
 cases and <=3-day cutoffs; previously reported cases remain in the complete
 report. Always show partial/failed sources and their pending ranges. A repeat
 case can still become urgent. Old out-of-range cases require a separately
 labelled, freshly verified reminder before inclusion; do not silently expand
 the report with stale cached opportunities.
+
+Follow AGENTS' token-efficient checks: retain raw responses locally, parse
+structured fields, and expose only relevant summaries/differences to the model.
+Do not trade away sources, cases, deadline verification or catch-up to save tokens.
 
 ## Maintenance and Verification
 
@@ -79,5 +83,5 @@ the report with stale cached opportunities.
 - Sync only approved rules, Skill helpers and synthetic tests. Never publish
   actual cases, state, cache, credentials or historical scrape output.
 - Preserve GitHub main/public and existing credentials; report auth failures
-  without circumventing them. Install the entrypoint from the workspace copy
-  after approved changes so the installed Skill cannot drift.
+  without circumventing them. Install `ENTRYPOINT.md` as the global Skill's
+  `SKILL.md` after approved changes; keep the full workflow only in this workspace.

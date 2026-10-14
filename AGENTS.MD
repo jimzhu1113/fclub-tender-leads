@@ -8,7 +8,7 @@ This workspace supports daily tender search for outsourced engineering and bid o
 
 Primary daily goal:
 
-- From Monday to Friday at 08:00 and 16:30 Asia/Taipei, check confirmed tender sources:
+- From Monday to Friday at 08:00 Asia/Taipei, check confirmed tender sources once daily:
   - FABAO CLUB latest cases: `https://www.fclub.tw/case_new.php`
   - Taiwan Cooperative Bank procurement bulletin: `https://ebulletin.tcb-bank.com.tw/bulletin-web/`
   - Hua Nan Bank procurement information: `https://www.hncb.com.tw/wps/portal/HNCB/per_finance/service/public_item/latest_news`
@@ -66,7 +66,7 @@ For daily case checks:
 - Taiwan Creative Content Agency tender announcements are loaded from `https://taicca.tw/public_information/purchase_placard/list?type_id=1&input_search=&year=<西元年>`; Jim-provided 2026 URL is `https://taicca.tw/public_information/purchase_placard/list?type_id=1&input_search=&year=2026`.
 - Kuang Jen Social Welfare Foundation tender-related items are found from `https://www.kjswf.org.tw/Download.aspx?tid=123` and paginated pages such as `https://www.kjswf.org.tw/Download.aspx?nowPage=<page>&tid=123`.
 - Taiwan Asset Management Co. tender announcements are checked from `https://www.tamco.com.tw/webtamco/announce/?announce_cate_name=important-announce`; if that category page is empty, scan `https://www.tamco.com.tw/webtamco/announce/` and paginated pages such as `https://www.tamco.com.tw/webtamco/announce/page/<page>/`, then filter items whose visible category is `招標公告`.
-- Scheduled reporting runs Monday to Friday at 08:00 and 16:30 Asia/Taipei. Both runs use this workspace and the same local source state.
+- Scheduled reporting runs Monday to Friday at 08:00 Asia/Taipei only. The afternoon schedule is cancelled. Manual requests use this workspace and the same local source state.
 - First Bank fixed/tender announcements are checked from `https://www.firstbank.com.tw/sites/fcb/FixedAnnouncement#atab1-tab`; the page title is `公告資訊` and it contains announcement sections including `招標公告` and `採購公告`.
 - Yuanta Bank announcement information is checked from `https://www.yuantabank.com.tw/bank/bulletin/bulletin/list.do`; include only dated items whose title or detail clearly indicates tender/procurement work.
 - Yuanta Financial Holding major announcements are checked from `https://www.yuanta.com/TW/News-and-Media/Announcements`; include only dated items whose title or detail clearly indicates tender/procurement, engineering, renovation, construction, contract amount, or public bidding information. Treat these as tender intelligence unless the notice is clearly an active procurement opportunity.
@@ -275,12 +275,12 @@ Yuanta Life field mapping:
 
 Daily search results, case整理結果, and historical case records must not be committed or pushed to GitHub unless Jim explicitly asks.
 
-## Reliable Morning and Afternoon Workflow
+## Reliable Daily Workflow
 
 - This file is the single source of truth. The installed Skill is a small entrypoint to the workspace copy; do not maintain another source list or date policy there.
 - Use `node skill/fclub-tender-leads/scripts/tender-workflow.mjs plan --root .` before collecting cases. Do not run the retired `tmp_*probe.mjs` or `tmp_tender_extract.mjs` scripts or edit hardcoded dates for each run.
 - The helper computes Asia/Taipei dates, inclusive ranges, weekend expansion and per-source catch-up. Unknown source history starts at least five calendar days back (today included). A previously failed range remains pending until that source is completely checked and its report is confirmed delivered.
-- Morning and afternoon both check all 14 sources and keep all in-range cases. The afternoon report highlights new/changed cases and urgent deadlines first; unchanged cases remain in a compact linked table with the required fields. Do not silently exclude cases or introduce opportunity screening.
+- The daily morning run and manual requests check all 14 sources and keep all in-range cases. Highlight new/changed cases and urgent deadlines first; unchanged cases remain in a compact linked table with the required fields. Do not silently exclude cases or introduce opportunity screening.
 - For each source record `complete`, `partial`, or `failed`, the checked time, date coverage, official evidence URLs, structure validation and pagination completion. Missing sources default to failed. HTTP 200 or an empty parser output is not evidence of zero cases. Confirm a recognizable official list and either parsed entries or an explicit empty-list indication, and follow all pages needed to reach the range boundary.
 - Only a complete official date-range check can advance that source's successful coverage. Failed/partial sources retain their own pending start date; successful sources do not inherit another source's failure. A run is wholly successful only when all 14 sources are complete.
 - State, pending reports, source responses and case fingerprints belong exclusively in `.tender-local/` (Git ignored). Use the helper's two-phase `prepare` and `ack` protocol. Preparing a report must not mark it delivered. On the next run, verify the previous final report's run id in this task before acknowledging it. If delivery cannot be verified, keep pending coverage and recheck. Do not initialize success from file timestamps, tool completion, or assumptions.
@@ -291,6 +291,15 @@ Daily search results, case整理結果, and historical case records must not be 
 - Start the report with the complete date range, checked-at time, complete/partial/failed counts out of 14, and new/updated/previously-reported counts. Include urgent cases, then per-source cases and pending-source reasons. Say `截至查詢時間` rather than claiming a morning scan covers the whole day.
 - A direct fetch failure may fall back to normal official browsing. Use at most one transient retry, bounded timeouts and no access-control bypass. Search snapshots are supplementary and never count as a complete official check.
 - Test helpers after changes with `node --test skill/fclub-tender-leads/scripts/tender-workflow.test.mjs`; use only synthetic fixtures in committed tests. All actual observations stay local.
+
+### Token-Efficient Checks
+
+- Use `plan --root . --compact` for a short execution plan; the full plan remains in the local run folder. After prepare, use `summary --root . --run-id <id>` instead of printing the full report or state into the conversation.
+- Keep raw HTML, JSON, browser evidence and full reports in `.tender-local/`. Extract structured dates, case numbers, titles, links, deadlines and coverage counts with parsers. Return only relevant fields, substantive differences and errors to the model; avoid repeated page navigation/footer text.
+- Read canonical rules once per run. The installed Skill and automation prompt must be short entrypoints, not copies of this file. Reuse a verified parser within a run instead of rewriting one for every page.
+- Fetch each required official list/page once per run and reuse that response. Recheck necessary details, including live deadline/status changes; unchanged list titles alone do not prove unchanged details. Reuse cached field extraction only when the substantive response is verified unchanged. Never relabel an old observation as freshly checked.
+- Do not repeatedly retry login/403/blank-page failures. Apply the existing bounded fallback, record the source-specific reason and retain catch-up. Other sources continue independently.
+- Deliver highlights plus a complete local report link. All cases, required fields, source coverage and pending reasons remain in the full report. Measure savings from actual usage when available; do not claim an unmeasured token-saving percentage.
 
 ## AGENTS.MD Update Rules
 
@@ -386,6 +395,6 @@ Include Gmail-related sections only when that daily run also performs mailbox wo
 
 If a report includes catch-up dates, state the catch-up range at the start of `今日標案總覽`.
 
-Include the report run id in the final message for delivery reconciliation. Every source must have a result or an explicit pending reason. Afternoon highlights may precede the source sections, but retain all cases and the existing required fields.
+Include the report run id in the final message for delivery reconciliation. Every source must have a result or an explicit pending reason. New/changed cases and urgent deadlines may precede the source sections, but retain all cases and the existing required fields.
 
 When reporting cases in a table, make the case name clickable and keep a separate `案件連結` column if space allows.

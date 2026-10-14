@@ -1,7 +1,7 @@
 interface:
   display_name: "發包標案每日搜尋"
   short_description: "Daily bank, public, and FABAO tender search"
-  default_prompt: "Use $fclub-tender-leads to read workspace AGENTS.MD, run the weekday 08:00 or 16:30 Taipei tender check, reconcile delivered reports, catch up each source, and report all cases with changes and deadlines."
+  default_prompt: "Use $fclub-tender-leads to read workspace AGENTS.MD, run the weekday 08:00 Taipei tender check once daily, reconcile delivered reports, catch up each source, and report all cases with changes and deadlines using compact tool summaries."
 
 policy:
   allow_implicit_invocation: true

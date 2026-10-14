@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 const allowed = new Set([
   '.gitignore', 'AGENTS.MD',
   'skill/fclub-tender-leads/SKILL.md',
+  'skill/fclub-tender-leads/ENTRYPOINT.md',
   'skill/fclub-tender-leads/agents/openai.yaml',
   'skill/fclub-tender-leads/scripts/tender-workflow.mjs',
   'skill/fclub-tender-leads/scripts/tender-workflow.test.mjs',

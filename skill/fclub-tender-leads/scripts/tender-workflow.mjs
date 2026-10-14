@@ -202,6 +202,20 @@ export function buildReport(plan, input, state) {
       updated: cases.filter(c => c.change === '內容更新').length, repeated: cases.filter(c => c.change === '已匯報').length } };
 }
 
+export function summarizeReport(report) {
+  const cases = report.sources.flatMap(source => source.cases);
+  return {
+    runId: report.runId, asOf: report.asOf, range: report.range,
+    counts: report.counts, total: cases.length,
+    sources: report.sources.map(source => ({ id: source.id, range: source.range,
+      status: source.status, count: source.cases.length,
+      reason: source.status === 'complete' ? undefined : source.reason })),
+    urgent: cases.filter(entry => entry.urgent).sort((a, b) => a.deadline.localeCompare(b.deadline))
+      .map(entry => ({ sourceId: entry.sourceId, title: entry.title, url: entry.url,
+        deadline: entry.deadline, days: entry.days, opportunity: entry.opportunity })),
+  };
+}
+
 const cell = value => String(value ?? MISSING).replaceAll('|', '\\|').replace(/[\r\n]+/g, ' ').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 const label = value => cell(value).replace(/[\[\]]/g, '\\$&');
 const link = entry => `[${label(entry.title)}](<${entry.url}>)`;
@@ -284,7 +298,10 @@ async function withLock(local, action) {
   try { return await action(); } finally { await lock.close(); await fs.unlink(lockPath); }
 }
 async function main() {
-  const { values, positionals } = parseArgs({ allowPositionals: true, options: Object.fromEntries(['root', 'as-of', 'start', 'end', 'input', 'run-id', 'evidence'].map(key => [key, { type: 'string' }])) });
+  const { values, positionals } = parseArgs({ allowPositionals: true, options: {
+    ...Object.fromEntries(['root', 'as-of', 'start', 'end', 'input', 'run-id', 'evidence'].map(key => [key, { type: 'string' }])),
+    compact: { type: 'boolean', default: false },
+  } });
   const root = path.resolve(values.root ?? '.');
   const local = path.join(root, '.tender-local');
   const statePath = path.join(local, 'state.json');
@@ -299,7 +316,9 @@ async function main() {
       await atomicJson(path.join(dir, 'plan.json'), plan);
       const input = { runId: plan.runId, sources: plan.sources.map(source => ({ id: source.id, range: source.range, status: 'failed', checkedAt: null, reason: '尚未查核', verification: { officialListRead: false, structureValid: false, paginationComplete: false, dateCoverageComplete: false, parsedCount: 0, explicitEmpty: false, evidenceUrls: [] }, cases: [] })) };
       await atomicJson(path.join(dir, 'input.json'), input);
-      console.log(JSON.stringify({ ...plan, inputFile: path.join(dir, 'input.json'), pendingDelivery: Object.keys(state.pending) }, null, 2));
+      const output = values.compact ? { runId: plan.runId, asOf: plan.asOf, requested: plan.requested,
+        sources: plan.sources.map(({ id, range, catchUp }) => ({ id, range, catchUp })) } : plan;
+      console.log(JSON.stringify({ ...output, inputFile: path.join(dir, 'input.json'), pendingDelivery: Object.keys(state.pending) }, null, values.compact ? 0 : 2));
     } else if (command === 'prepare') {
       if (!values.input) throw new Error('--input is required');
       const inputPath = path.resolve(values.input);
@@ -310,14 +329,21 @@ async function main() {
       const report = buildReport(plan, input, state);
       const reportFile = path.join(path.dirname(inputPath), 'report.md');
       await fs.writeFile(reportFile, renderReport(report), 'utf8');
+      await atomicJson(path.join(path.dirname(inputPath), 'report.json'), report);
       state.pending[report.runId] = report;
       state.revision++;
       await atomicJson(statePath, state);
       console.log(JSON.stringify({ runId: report.runId, reportFile, counts: report.counts, delivered: false }, null, 2));
+    } else if (command === 'summary') {
+      const id = values['run-id'];
+      if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id ?? '')) throw new Error('Valid --run-id is required');
+      const reportFile = path.join(local, 'runs', id, 'report.md');
+      const report = state.pending[id] ?? JSON.parse(await fs.readFile(path.join(path.dirname(reportFile), 'report.json'), 'utf8'));
+      console.log(JSON.stringify({ ...summarizeReport(report), reportFile, delivered: Boolean(state.delivered[id]) }));
     } else if (command === 'ack') {
       await atomicJson(statePath, acknowledge(state, values['run-id'], values.evidence));
       console.log('Acknowledged verified delivery; only complete sources advance coverage.');
-    } else throw new Error('Use plan, prepare, or ack');
+    } else throw new Error('Use plan, prepare, summary, or ack');
   });
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
